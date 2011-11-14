@@ -83,7 +83,10 @@ func NewSchematicReader(r io.Reader) (sr *SchematicReader, err os.Error) {
 }
 
 type Schematic struct {
-	Width int
+	Width     int
+	Length    int
+	Height    int
+	Materials string
 }
 
 func (r *SchematicReader) Parse() (s *Schematic, err os.Error) {
@@ -109,10 +112,21 @@ func (r *SchematicReader) Parse() (s *Schematic, err os.Error) {
 		switch name {
 		case "Width":
 			s.Width, err = r.r.ReadShort()
+		case "Length":
+			s.Length, err = r.r.ReadShort()
+		case "Height":
+			s.Height, err = r.r.ReadShort()
+		case "Materials":
+			s.Materials, err = r.r.ReadString()
+		default:
+			return nil, fmt.Errorf("Unexpected tag: %d, name: %s\n", typ, name)
 		}
 		if err != nil {
 			return
 		}
+	}
+	if s.Materials != "Alpha" {
+		return nil, fmt.Errorf("Materials must have 'Alpha' value, got: '%s'", s.Materials)
 	}
 	return
 }
