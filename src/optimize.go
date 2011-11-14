@@ -122,6 +122,14 @@ type Schematic struct {
 	Data      []byte
 }
 
+type Entity struct {
+
+}
+
+func (r *SchematicReader) ReadEntities() (entities []Entity, err os.Error) {
+	panic("ReadEntities not implemented")
+}
+
 func (r *SchematicReader) Parse() (s *Schematic, err os.Error) {
 	var typ byte
 	var name string
@@ -161,6 +169,8 @@ func (r *SchematicReader) Parse() (s *Schematic, err os.Error) {
 			s.WEOffsetY, err = r.r.ReadInt()
 		case "WEOffsetZ":
 			s.WEOffsetZ, err = r.r.ReadInt()
+		case "Entities":
+			s.Entities, err = r.ReadEntities()
 		default:
 			return nil, fmt.Errorf("Unexpected tag: %d, name: %s\n", typ, name)
 		}
