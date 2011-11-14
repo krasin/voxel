@@ -43,7 +43,7 @@ func (r *NBTReader) ReadString() (str string, err os.Error) {
 		return
 	}
 	data := make([]byte, l)
-	if _, err = r.r.Read(data); err != nil {
+	if _, err = io.ReadFull(r.r, data); err != nil {
 		return
 	}
 	return string(data), nil
@@ -51,7 +51,7 @@ func (r *NBTReader) ReadString() (str string, err os.Error) {
 
 func (r *NBTReader) ReadShort() (val int, err os.Error) {
 	buf := [2]byte{}
-	if _, err = r.r.Read(buf[:]); err != nil {
+	if _, err = io.ReadFull(r.r, buf[:]); err != nil {
 		return
 	}
 	val = int(buf[1]) + (int(buf[0]) << 8) // Big Endian
@@ -60,7 +60,7 @@ func (r *NBTReader) ReadShort() (val int, err os.Error) {
 
 func (r *NBTReader) ReadInt() (val int, err os.Error) {
 	buf := [4]byte{}
-	if _, err = r.r.Read(buf[:]); err != nil {
+	if _, err = io.ReadFull(r.r, buf[:]); err != nil {
 		return
 	}
 	for i := 0; i < 4; i++ {
@@ -87,7 +87,7 @@ func (r *NBTReader) ReadByteArray() (data []byte, err os.Error) {
 		return
 	}
 	data = make([]byte, l)
-	_, err = r.r.Read(data)
+	_, err = io.ReadFull(r.r, data)
 	return
 }
 
