@@ -58,6 +58,18 @@ func (r *NBTReader) ReadShort() (val int, err os.Error) {
 	return
 }
 
+func (r *NBTReader) ReadInt() (val int, err os.Error) {
+	buf := [4]byte{}
+	if _, err = r.r.Read(buf[:]); err != nil {
+		return
+	}
+	for i := 0; i < 4; i++ {
+		val <<= 8
+		val += int(buf[i])
+	}
+	return
+}
+
 func (r *NBTReader) ReadTagName() (typ byte, name string, err os.Error) {
 	if typ, err = r.r.ReadByte(); err != nil {
 		return
@@ -67,6 +79,16 @@ func (r *NBTReader) ReadTagName() (typ byte, name string, err os.Error) {
 	}
 	name, err = r.ReadString()
 	fmt.Printf("Typ: %d, Name: %s\n", typ, name)
+	return
+}
+
+func (r *NBTReader) ReadByteArray() (data []byte, err os.Error) {
+	var l int
+	if l, err = r.ReadInt(); err != nil {
+		return
+	}
+	data = make([]byte, l)
+	_, err = r.r.Read(data)
 	return
 }
 
@@ -87,6 +109,7 @@ type Schematic struct {
 	Length    int
 	Height    int
 	Materials string
+	Blocks    []byte
 }
 
 func (r *SchematicReader) Parse() (s *Schematic, err os.Error) {
@@ -118,6 +141,8 @@ func (r *SchematicReader) Parse() (s *Schematic, err os.Error) {
 			s.Height, err = r.r.ReadShort()
 		case "Materials":
 			s.Materials, err = r.r.ReadString()
+		case "Blocks":
+			s.Blocks, err = r.r.ReadByteArray()
 		default:
 			return nil, fmt.Errorf("Unexpected tag: %d, name: %s\n", typ, name)
 		}
