@@ -119,6 +119,7 @@ type Schematic struct {
 	WEOffsetZ int
 	Materials string
 	Blocks    []byte
+	Data      []byte
 }
 
 func (r *SchematicReader) Parse() (s *Schematic, err os.Error) {
@@ -152,6 +153,8 @@ func (r *SchematicReader) Parse() (s *Schematic, err os.Error) {
 			s.Materials, err = r.r.ReadString()
 		case "Blocks":
 			s.Blocks, err = r.r.ReadByteArray()
+		case "Data":
+			s.Data, err = r.r.ReadByteArray()
 		case "WEOffsetX":
 			s.WEOffsetX, err = r.r.ReadInt()
 		case "WEOffsetY":
