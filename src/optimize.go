@@ -78,7 +78,6 @@ func (r *NBTReader) ReadTagName() (typ byte, name string, err os.Error) {
 		return
 	}
 	name, err = r.ReadString()
-	fmt.Printf("Typ: %d, Name: %s\n", typ, name)
 	return
 }
 
@@ -115,6 +114,9 @@ type Schematic struct {
 	Width     int
 	Length    int
 	Height    int
+	WEOffsetX int
+	WEOffsetY int
+	WEOffsetZ int
 	Materials string
 	Blocks    []byte
 }
@@ -150,6 +152,12 @@ func (r *SchematicReader) Parse() (s *Schematic, err os.Error) {
 			s.Materials, err = r.r.ReadString()
 		case "Blocks":
 			s.Blocks, err = r.r.ReadByteArray()
+		case "WEOffsetX":
+			s.WEOffsetX, err = r.r.ReadInt()
+		case "WEOffsetY":
+			s.WEOffsetY, err = r.r.ReadInt()
+		case "WEOffsetZ":
+			s.WEOffsetZ, err = r.r.ReadInt()
 		default:
 			return nil, fmt.Errorf("Unexpected tag: %d, name: %s\n", typ, name)
 		}
@@ -189,10 +197,28 @@ func ReadSchematic(input io.Reader) (vol BoolVoxelVolume, err os.Error) {
 	return
 }
 
+func WriteNptl(vol BoolVoxelVolume, output io.Writer) (err os.Error) {
+	for y := 0; y < vol.YLen(); y++ {
+		for z := 0; z < vol.ZLen(); z++ {
+			for x := 0; x < vol.XLen(); x++ {
+				if !vol.Get(x, y, z) {
+					continue
+				}
+				if _, err = fmt.Fprintf(output, "%f %f %f %f %f %f\n", float64(x), float64(y), float64(z), float64(1), float64(0), float64(0)); err != nil {
+					return
+				}
+			}
+		}
+	}
+	return
+}
+
 func main() {
 	vol, err := ReadSchematic(os.Stdin)
 	if err != nil {
 		log.Fatalf("ReadSchematic: %v", err)
 	}
-	fmt.Printf("Xlen: %d, YLen: %d, ZLen: %d\n", vol.XLen(), vol.YLen(), vol.ZLen())
+	if err = WriteNptl(vol, os.Stdout); err != nil {
+		log.Fatalf("WriteNptl: %v", err)
+	}
 }
