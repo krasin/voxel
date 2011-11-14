@@ -70,6 +70,11 @@ func (r *NBTReader) ReadInt() (val int, err os.Error) {
 	return
 }
 
+func (r *NBTReader) ReadTagTyp() (typ byte, err os.Error) {
+	typ, err = r.r.ReadByte()
+	return
+}
+
 func (r *NBTReader) ReadTagName() (typ byte, name string, err os.Error) {
 	if typ, err = r.r.ReadByte(); err != nil {
 		return
@@ -110,6 +115,10 @@ func NewSchematicReader(r io.Reader) (sr *SchematicReader, err os.Error) {
 	return &SchematicReader{r: nr}, nil
 }
 
+type Entity struct {
+	Id string
+}
+
 type Schematic struct {
 	Width     int
 	Length    int
@@ -120,14 +129,46 @@ type Schematic struct {
 	Materials string
 	Blocks    []byte
 	Data      []byte
+	Entities  []Entity
 }
 
-type Entity struct {
-
+func (r *SchematicReader) ReadEntity() (entity Entity, err os.Error) {
+	for {
+		var typ byte
+		var name string
+		if typ, name, err = r.r.ReadTagName(); err != nil {
+			return
+		}
+		if typ == TAG_END {
+			break
+		}
+		switch name {
+		default:
+			err = fmt.Errorf("Unknown entity field: %s", name)
+			return
+		}
+	}
+	return
 }
 
 func (r *SchematicReader) ReadEntities() (entities []Entity, err os.Error) {
-	panic("ReadEntities not implemented")
+	for {
+		var typ byte
+		if typ, err = r.r.ReadTagTyp(); err != nil {
+			return
+		}
+		if typ == TAG_END {
+			break
+		}
+		if typ == TAG_COMPOUND {
+		}
+		var entity Entity
+		if entity, err = r.ReadEntity(); err != nil {
+			return
+		}
+		entities = append(entities, entity)
+	}
+	return
 }
 
 func (r *SchematicReader) Parse() (s *Schematic, err os.Error) {
