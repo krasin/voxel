@@ -61,17 +61,38 @@ func (r *NBTReader) ReadTagName() (typ byte, name string, err os.Error) {
 	return
 }
 
-func ReadSchematic(input io.Reader) (err os.Error) {
-	var r *NBTReader
-	if r, err = NewNBTReader(input); err != nil {
+type SchematicReader struct {
+	r *NBTReader
+}
+
+func NewSchematicReader(r io.Reader) (sr *SchematicReader, err os.Error) {
+	var nr *NBTReader
+	if nr, err = NewNBTReader(r); err != nil {
 		return
 	}
+	return &SchematicReader{r: nr}, nil
+}
+
+type Schematic struct {
+
+}
+
+func (r *SchematicReader) Parse() (s *Schematic, err os.Error) {
 	var typ byte
 	var name string
-	if typ, name, err = r.ReadTagName(); err != nil {
+	if typ, name, err = r.r.ReadTagName(); err != nil {
 		return
 	}
 	fmt.Printf("Typ: %d, Name: %s\n", typ, name)
+	return
+}
+
+func ReadSchematic(input io.Reader) (err os.Error) {
+	var r *SchematicReader
+	if r, err = NewSchematicReader(input); err != nil {
+		return
+	}
+	_, err = r.Parse()
 	return
 }
 
