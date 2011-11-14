@@ -25,7 +25,7 @@ Missing piece: optimize.
 
 Optimize plan:
 
-1. Parse .schematic file
+1. Parse .schematic file (done)
 2. Write .npts
 3. Remove deep voxels
 4. Make a hole
