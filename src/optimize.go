@@ -38,16 +38,24 @@ func NewNBTReader(r io.Reader) (nr *NBTReader, err os.Error) {
 type Tag int
 
 func (r *NBTReader) ReadString() (str string, err os.Error) {
-	buf := [2]byte{}
-	if _, err = r.r.Read(buf[:]); err != nil {
+	var l int
+	if l, err = r.ReadShort(); err != nil {
 		return
 	}
-	l := int(buf[1]) + (int(buf[0]) << 8) // Big Endian
 	data := make([]byte, l)
 	if _, err = r.r.Read(data); err != nil {
 		return
 	}
 	return string(data), nil
+}
+
+func (r *NBTReader) ReadShort() (val int, err os.Error) {
+	buf := [2]byte{}
+	if _, err = r.r.Read(buf[:]); err != nil {
+		return
+	}
+	val = int(buf[1]) + (int(buf[0]) << 8) // Big Endian
+	return
 }
 
 func (r *NBTReader) ReadTagName() (typ byte, name string, err os.Error) {
@@ -58,6 +66,7 @@ func (r *NBTReader) ReadTagName() (typ byte, name string, err os.Error) {
 		return
 	}
 	name, err = r.ReadString()
+	fmt.Printf("Typ: %d, Name: %s\n", typ, name)
 	return
 }
 
@@ -74,7 +83,7 @@ func NewSchematicReader(r io.Reader) (sr *SchematicReader, err os.Error) {
 }
 
 type Schematic struct {
-
+	Width int
 }
 
 func (r *SchematicReader) Parse() (s *Schematic, err os.Error) {
@@ -83,7 +92,28 @@ func (r *SchematicReader) Parse() (s *Schematic, err os.Error) {
 	if typ, name, err = r.r.ReadTagName(); err != nil {
 		return
 	}
-	fmt.Printf("Typ: %d, Name: %s\n", typ, name)
+	if typ != TAG_COMPOUND {
+		return nil, fmt.Errorf("Top level tag must be compound. Got: %d", typ)
+	}
+	if name != "Schematic" {
+		return nil, fmt.Errorf("Unexpected tag name: %s, want: Schematic", name)
+	}
+	s = new(Schematic)
+	for {
+		if typ, name, err = r.r.ReadTagName(); err != nil {
+			return
+		}
+		if typ == TAG_END {
+			break
+		}
+		switch name {
+		case "Width":
+			s.Width, err = r.r.ReadShort()
+		}
+		if err != nil {
+			return
+		}
+	}
 	return
 }
 
