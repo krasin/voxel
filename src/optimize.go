@@ -96,6 +96,13 @@ type SchematicReader struct {
 	r *NBTReader
 }
 
+type BoolVoxelVolume interface {
+	Get(x, y, z int) bool
+	XLen() int
+	YLen() int
+	ZLen() int
+}
+
 func NewSchematicReader(r io.Reader) (sr *SchematicReader, err os.Error) {
 	var nr *NBTReader
 	if nr, err = NewNBTReader(r); err != nil {
@@ -156,17 +163,36 @@ func (r *SchematicReader) Parse() (s *Schematic, err os.Error) {
 	return
 }
 
-func ReadSchematic(input io.Reader) (err os.Error) {
+func (s *Schematic) XLen() int {
+	return s.Width
+}
+
+func (s *Schematic) YLen() int {
+	return s.Height
+}
+
+func (s *Schematic) ZLen() int {
+	return s.Length
+}
+
+func (s *Schematic) Get(x, y, z int) bool {
+	index := y*s.XLen()*s.ZLen() + z*s.XLen() + x
+	return s.Blocks[index] != 0
+}
+
+func ReadSchematic(input io.Reader) (vol BoolVoxelVolume, err os.Error) {
 	var r *SchematicReader
 	if r, err = NewSchematicReader(input); err != nil {
 		return
 	}
-	_, err = r.Parse()
+	vol, err = r.Parse()
 	return
 }
 
 func main() {
-	if err := ReadSchematic(os.Stdin); err != nil {
+	vol, err := ReadSchematic(os.Stdin)
+	if err != nil {
 		log.Fatalf("ReadSchematic: %v", err)
 	}
+	fmt.Printf("Xlen: %d, YLen: %d, ZLen: %d\n", vol.XLen(), vol.YLen(), vol.ZLen())
 }
