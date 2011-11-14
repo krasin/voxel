@@ -61,15 +61,22 @@ func (r *NBTReader) ReadTagName() (typ byte, name string, err os.Error) {
 	return
 }
 
-func main() {
-	r, err := NewNBTReader(os.Stdin)
-	if err != nil {
-		log.Fatalf("gzip: %v", err)
+func ReadSchematic(input io.Reader) (err os.Error) {
+	var r *NBTReader
+	if r, err = NewNBTReader(input); err != nil {
+		return
 	}
 	var typ byte
 	var name string
 	if typ, name, err = r.ReadTagName(); err != nil {
-		log.Fatalf("ReadTagName: %v", err)
+		return
 	}
 	fmt.Printf("Typ: %d, Name: %s\n", typ, name)
+	return
+}
+
+func main() {
+	if err := ReadSchematic(os.Stdin); err != nil {
+		log.Fatalf("ReadSchematic: %v", err)
+	}
 }
