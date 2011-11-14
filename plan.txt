@@ -1,0 +1,25 @@
+Minimum Viable Product for 3d print optimizer.
+
+1. A simple website (AppEngine) that allows to upload a mesh, stores it in the blob, adds a task for worker. Worker will download the blob and upload the result.
+
+2. Worker
+
+- gets the task from the frontend
+- downloads the blob
+- converts to .schematic voxel file
+- runs optimizer
+- runs PoissonSurface reconstruction (.ply is the output format)
+- converts .ply to .stl
+- uploads the blob and reports the success
+
+
+Stage 0: be able to optimize "by hand".
+Pipeline:
+
+1. binvox
+2. optimize
+3. PoissonRecon
+4. meshlab
+
+Missing piece: optimize.
+
