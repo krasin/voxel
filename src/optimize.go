@@ -287,6 +287,54 @@ func Normal(vol BoolVoxelVolume, x, y, z int) (nx, ny, nz float64) {
 	if vol.Get(x, y, z+1) {
 		pz--
 	}
+	if vol.Get(x-1, y-1, z) {
+		px++
+		py++
+	}
+	if vol.Get(x+1, y-1, z) {
+		px--
+		py++
+	}
+	if vol.Get(x-1, y+1, z) {
+		px++
+		py--
+	}
+	if vol.Get(x+1, y+1, z) {
+		px--
+		py--
+	}
+	if vol.Get(x, y-1, z-1) {
+		py++
+		pz++
+	}
+	if vol.Get(x, y+1, z-1) {
+		py--
+		pz++
+	}
+	if vol.Get(x, y-1, z+1) {
+		py++
+		pz--
+	}
+	if vol.Get(x, y+1, z+1) {
+		py--
+		pz--
+	}
+	if vol.Get(x-1, y, z-1) {
+		px++
+		pz++
+	}
+	if vol.Get(x+1, y, z-1) {
+		px--
+		pz++
+	}
+	if vol.Get(x-1, y, z+1) {
+		px++
+		pz--
+	}
+	if vol.Get(x+1, y, z+1) {
+		px--
+		pz--
+	}
 	r2 := px*px + py*py + pz*pz
 	if r2 == 0 {
 		return 1, 0, 0
@@ -298,10 +346,130 @@ func Normal(vol BoolVoxelVolume, x, y, z int) (nx, ny, nz float64) {
 	return
 }
 
+type ArrayVolume struct {
+	a                []uint32
+	xlen, ylen, zlen int
+}
+
+func NewArrayVolume(xlen, ylen, zlen int) *ArrayVolume {
+	l := xlen * ylen * zlen
+	return &ArrayVolume{
+		a:    make([]uint32, l),
+		xlen: xlen,
+		ylen: ylen,
+		zlen: zlen,
+	}
+}
+
+func (v *ArrayVolume) XLen() int {
+	return v.xlen
+}
+
+func (v *ArrayVolume) YLen() int {
+	return v.ylen
+}
+
+func (v *ArrayVolume) ZLen() int {
+	return v.zlen
+}
+
+func (v *ArrayVolume) Index(x, y, z int) int {
+	return x*v.ylen*v.zlen + y*v.zlen + z
+}
+
+func (v *ArrayVolume) Coord(index int) (x, y, z int) {
+	z = index % v.zlen
+	index /= v.zlen
+	y = index % v.ylen
+	index /= v.ylen
+	x = index
+	return
+}
+
+func (v *ArrayVolume) Get(x, y, z int) bool {
+	if x < 0 || y < 0 || z < 0 || x >= v.XLen() || y >= v.YLen() || z >= v.ZLen() {
+		return false
+	}
+	return v.a[v.Index(x, y, z)] != 0
+}
+
+func (v *ArrayVolume) Set(x, y, z int, val uint32) {
+	v.a[v.Index(x, y, z)] = val
+}
+
+func (v *ArrayVolume) GetV(x, y, z int) uint32 {
+	return v.a[v.Index(x, y, z)]
+}
+
+func Optimize(input BoolVoxelVolume, n2 int) BoolVoxelVolume {
+	res := NewArrayVolume(input.XLen(), input.YLen(), input.ZLen())
+	var q, q2 []int
+	for y := 0; y < input.YLen(); y++ {
+		for z := 0; z < input.ZLen(); z++ {
+			for x := 0; x < input.XLen(); x++ {
+				if !input.Get(x, y, z) {
+					res.Set(x, y, z, 0)
+					continue
+				}
+				if IsBoundary(input, x, y, z) && z > 0 {
+					res.Set(x, y, z, 1)
+					q = append(q, res.Index(x, y, z))
+					continue
+				}
+				res.Set(x, y, z, math.MaxUint32)
+			}
+		}
+	}
+	for len(q) > 0 {
+		fmt.Fprintf(os.Stderr, "len(q): %d\n", len(q))
+		q, q2 = q2[:0], q
+		for _, index := range q2 {
+			x, y, z := res.Coord(index)
+			v := res.GetV(x, y, z)
+			for dx := -1; dx <= 1; dx++ {
+				x1 := x + dx
+				for dy := -1; dy <= 1; dy++ {
+					y1 := y + dy
+					for dz := -1; dz <= 1; dz++ {
+						z1 := z + dz
+						if !res.Get(x1, y1, z1) || dx == 0 && dy == 0 && dz == 0 {
+							continue
+						}
+						r2 := uint32(dx*dx + dy*dy + dz*dz)
+						v1 := res.GetV(x1, y1, z1)
+						if v1 > v+r2 {
+							res.Set(x1, y1, z1, v+r2)
+							q = append(q, res.Index(x1, y1, z1))
+						}
+					}
+				}
+			}
+		}
+	}
+	for y := 0; y < res.YLen(); y++ {
+		for z := 0; z < res.ZLen(); z++ {
+			for x := 0; x < res.XLen(); x++ {
+				if res.GetV(x, y, z) == math.MaxUint32 {
+					panic("unreachable")
+				}
+				if res.GetV(x, y, z) > uint32(n2) {
+					res.Set(x, y, z, 0)
+				}
+			}
+		}
+	}
+	return res
+}
+
 func WriteNptl(vol BoolVoxelVolume, output io.Writer) (err os.Error) {
+	v := 0
 	for y := 0; y < vol.YLen(); y++ {
 		for z := 0; z < vol.ZLen(); z++ {
 			for x := 0; x < vol.XLen(); x++ {
+				if !vol.Get(x, y, z) {
+					continue
+				}
+				v++
 				if !IsBoundary(vol, x, y, z) {
 					continue
 				}
@@ -312,6 +480,7 @@ func WriteNptl(vol BoolVoxelVolume, output io.Writer) (err os.Error) {
 			}
 		}
 	}
+	fmt.Fprintf(os.Stderr, "Volume is filled by %v%\n", float64(v)*float64(100)/(float64(vol.XLen())*float64(vol.YLen())*float64(vol.ZLen())))
 	return
 }
 
@@ -320,6 +489,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("ReadSchematic: %v", err)
 	}
+	vol = Optimize(vol, 70)
 	if err = WriteNptl(vol, os.Stdout); err != nil {
 		log.Fatalf("WriteNptl: %v", err)
 	}
