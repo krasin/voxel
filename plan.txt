@@ -29,5 +29,5 @@ Optimize plan:
 2. Write .npts (done)
 3. Remove deep voxels (done)
 4. Make a hole (done)
-5. Save correct size (investigate how to achieve this. Looks like .schematic is not the right thing)
+5. Implement voxelization
 
