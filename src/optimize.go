@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math"
 	"os"
 )
 
@@ -238,6 +239,9 @@ func (s *Schematic) ZLen() int {
 }
 
 func (s *Schematic) Get(x, y, z int) bool {
+	if x < 0 || y < 0 || z < 0 || x >= s.XLen() || y >= s.YLen() || z >= s.ZLen() {
+		return false
+	}
 	index := y*s.XLen()*s.ZLen() + z*s.XLen() + x
 	return s.Blocks[index] != 0
 }
@@ -251,14 +255,58 @@ func ReadSchematic(input io.Reader) (vol BoolVoxelVolume, err os.Error) {
 	return
 }
 
+func IsBoundary(vol BoolVoxelVolume, x, y, z int) bool {
+	if !vol.Get(x, y, z) {
+		return false
+	}
+	if x == 0 || x == vol.XLen()-1 || y == 0 || y == vol.YLen()-1 || z == 0 || z == vol.ZLen()-1 {
+		return true
+	}
+	return !(vol.Get(x-1, y, z) && vol.Get(x+1, y, z) &&
+		vol.Get(x, y-1, z) && vol.Get(x, y+1, z) &&
+		vol.Get(x, y, z-1) && vol.Get(x, y, z+1))
+}
+
+func Normal(vol BoolVoxelVolume, x, y, z int) (nx, ny, nz float64) {
+	var px, py, pz int
+	if vol.Get(x-1, y, z) {
+		px++
+	}
+	if vol.Get(x+1, y, z) {
+		px--
+	}
+	if vol.Get(x, y-1, z) {
+		py++
+	}
+	if vol.Get(x, y+1, z) {
+		py--
+	}
+	if vol.Get(x, y, z-1) {
+		pz++
+	}
+	if vol.Get(x, y, z+1) {
+		pz--
+	}
+	r2 := px*px + py*py + pz*pz
+	if r2 == 0 {
+		return 1, 0, 0
+	}
+	l := math.Sqrt(float64(r2))
+	nx = float64(px) / l
+	ny = float64(py) / l
+	nz = float64(pz) / l
+	return
+}
+
 func WriteNptl(vol BoolVoxelVolume, output io.Writer) (err os.Error) {
 	for y := 0; y < vol.YLen(); y++ {
 		for z := 0; z < vol.ZLen(); z++ {
 			for x := 0; x < vol.XLen(); x++ {
-				if !vol.Get(x, y, z) {
+				if !IsBoundary(vol, x, y, z) {
 					continue
 				}
-				if _, err = fmt.Fprintf(output, "%f %f %f %f %f %f\n", float64(x), float64(y), float64(z), float64(1), float64(0), float64(0)); err != nil {
+				nx, ny, nz := Normal(vol, x, y, z)
+				if _, err = fmt.Fprintf(output, "%f %f %f %f %f %f\n", float64(x), float64(y), float64(z), nx, ny, nz); err != nil {
 					return
 				}
 			}
