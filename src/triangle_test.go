@@ -12,6 +12,17 @@ type triangleTest struct {
 }
 
 var (
+	smallRectTriangle = [3]Point{
+		{0, 0, 0},
+		{1, 0, 0},
+		{0, 1, 0},
+	}
+	mediumRectTriangle = [3]Point{
+		{0, 0, 0},
+		{4, 0, 0},
+		{0, 4, 0},
+	}
+
 	rectTriangle = [3]Point{
 		{0, 0, 0},
 		{10, 0, 0},
@@ -44,8 +55,14 @@ var (
 		{
 			Point{1, 1, 1},
 			rectTriangle,
-			true,
+			false,
 			1,
+		},
+		{
+			Point{1, 1, 1},
+			rectTriangle,
+			true,
+			2,
 		},
 		{
 			Point{11, 0, 0},
@@ -98,8 +115,14 @@ var (
 		{
 			Point{3, 3, 4},
 			eqTriangle,
-			true,
+			false,
 			1,
+		},
+		{
+			Point{3, 3, 4},
+			eqTriangle,
+			true,
+			2,
 		},
 		{
 			Point{3, 3, 5},
@@ -166,4 +189,61 @@ func TestTriangle(t *testing.T) {
 		}
 	}
 
+}
+
+type allTriangleDotsTest struct {
+	t [3]Point
+	p []Point
+}
+
+var allTriangleDotsTests = []allTriangleDotsTest{
+	{
+		smallRectTriangle,
+		[]Point{
+			{0, 0, 0},
+			{1, 0, 0},
+			{0, 1, 0},
+		},
+	},
+	{
+		mediumRectTriangle,
+		[]Point{
+			{0, 0, 0},
+			{0, 1, 0},
+			{1, 0, 0},
+			{0, 2, 0},
+			{1, 1, 0},
+			{2, 0, 0},
+			{0, 3, 0},
+			{1, 2, 0},
+			{2, 1, 0},
+			{3, 0, 0},
+			{0, 4, 0},
+			{1, 3, 0},
+			{2, 2, 0},
+			{3, 1, 0},
+			{4, 0, 0},
+		},
+	},
+}
+
+func TestAllTriangleDots(t *testing.T) {
+	m := make(map[uint64]Point)
+	for ind, test := range allTriangleDotsTests {
+		for _, p := range test.p {
+			m[hash(p)] = p
+		}
+		pt := AllTriangleDots(test.t[0], test.t[1], test.t[2], 1)
+		if len(pt) != len(test.p) {
+			t.Errorf("Test #%d: number of triangle dots is unexpected. Want: %v, got: %v", ind, test.p, pt)
+			continue
+		}
+		for _, p := range pt {
+			if _, ok := m[hash(p)]; !ok {
+				t.Errorf("Test #%d: unexpected point: %v. Want: %v, got: %v", ind, p, test.p, pt)
+				continue
+			}
+		}
+
+	}
 }

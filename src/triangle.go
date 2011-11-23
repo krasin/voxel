@@ -36,6 +36,7 @@ func DotInPlane(p, a, b, c Point, r int64) bool {
 
 	s := ScalarProduct(vc, v)
 	s.Mul(s, s)
+	s.Mul(s, big.NewInt(4))
 
 	r2 := big.NewInt(r)
 	r2.Mul(r2, r2)
@@ -84,4 +85,57 @@ func inplaneDotInTriangle(p, a, b, c Point, r int64) bool {
 
 func DotInTriangle(p, a, b, c Point, r int64) bool {
 	return DotInPlane(p, a, b, c, r) && inplaneDotInTriangle(p, a, b, c, r)
+}
+
+func hash(p Point) uint64 {
+	return (uint64(p[0]) << 42) + (uint64(p[1] << 21)) + uint64(p[2])
+}
+
+func adjacent(p Point) (res []Point) {
+	res = make([]Point, 8)[0:0]
+	for dx := -1; dx <= 1; dx++ {
+		for dy := -1; dy <= 1; dy++ {
+			for dz := -1; dz <= 1; dz++ {
+				if dx == 0 && dy == 0 && dz == 0 {
+					continue
+				}
+				res = append(res, Point{
+					p[0] + int64(dx),
+					p[1] + int64(dy),
+					p[2] + int64(dz),
+				})
+			}
+		}
+	}
+	return
+}
+
+func AllTriangleDots(a, b, c Point, r int64) (res []Point) {
+	q := []Point{a, b, c}
+	var q2 []Point
+	m := make(map[uint64]Point)
+	m[hash(a)] = a
+	m[hash(b)] = b
+	m[hash(c)] = c
+	for len(q) > 0 {
+		q, q2 = q2[0:0], q
+		for _, p := range q2 {
+			for _, p2 := range adjacent(p) {
+				if _, ok := m[hash(p2)]; ok {
+					continue
+				}
+
+				if !DotInTriangle(p2, a, b, c, r) {
+					continue
+				}
+				m[hash(p2)] = p2
+				q = append(q, p2)
+			}
+		}
+	}
+	res = make([]Point, len(m))[0:0]
+	for _, p := range m {
+		res = append(res, p)
+	}
+	return
 }
