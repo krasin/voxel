@@ -22,6 +22,11 @@ var (
 		{0, 9, 0},
 		{0, 0, 9},
 	}
+	thinTriangle = [3]Point{
+		{0, 0, 0},
+		{10, 1, 0},
+		{10, 0, 0},
+	}
 
 	triangleTests = []triangleTest{
 		{
@@ -100,6 +105,54 @@ var (
 			Point{3, 3, 5},
 			eqTriangle,
 			false,
+			1,
+		},
+		{
+			Point{0, 0, 0},
+			thinTriangle,
+			true,
+			1,
+		},
+		{
+			Point{1, 0, 0},
+			thinTriangle,
+			true,
+			1,
+		},
+		{
+			Point{0, 1, 0},
+			thinTriangle,
+			false,
+			1,
+		},
+		{
+			Point{1, 1, 0},
+			thinTriangle,
+			false,
+			1,
+		},
+		{
+			Point{2, 1, 0},
+			thinTriangle,
+			false,
+			1,
+		},
+		{
+			Point{5, 1, 0},
+			thinTriangle,
+			true,
+			1,
+		},
+		{
+			Point{9, 1, 0},
+			thinTriangle,
+			true,
+			1,
+		},
+		{
+			Point{10, 1, 0},
+			thinTriangle,
+			true,
 			1,
 		},
 	}

@@ -48,22 +48,40 @@ func DotInPlane(p, a, b, c Point, r int64) bool {
 	return t.Cmp(s) >= 0
 }
 
-func sameSide(p, a, b, c Point) bool {
+func len2(v Vector) (s *big.Int) {
+	s = big.NewInt(0)
+	for i := 0; i < 3; i++ {
+		tmp := big.NewInt(v[i])
+		tmp.Mul(tmp, tmp)
+		s.Add(s, tmp)
+	}
+	return
+}
+
+func sameSide(p, a, b, c Point, r int64) bool {
 	ab := NewVector(a, b)
 	ac := NewVector(a, c)
 	ap := NewVector(a, p)
 	v1 := VectorProduct(ab, ac)
 	v2 := VectorProduct(ab, ap)
 	s := ScalarProduct(v1, v2)
-	return s.Cmp(big.NewInt(0)) >= 0
+	if s.Cmp(big.NewInt(0)) >= 0 {
+		return true
+	}
+	h2 := len2(v2)
+	h2.Mul(h2, big.NewInt(4))
+	r2 := big.NewInt(r)
+	r2.Mul(r2, r2)
+	r2.Mul(r2, len2(ab))
+	return r2.Cmp(h2) >= 0
 }
 
-func inplaneDotInTriangle(p, a, b, c Point) bool {
-	return sameSide(p, a, b, c) &&
-		sameSide(p, b, c, a) &&
-		sameSide(p, c, a, b)
+func inplaneDotInTriangle(p, a, b, c Point, r int64) bool {
+	return sameSide(p, a, b, c, r) &&
+		sameSide(p, b, c, a, r) &&
+		sameSide(p, c, a, b, r)
 }
 
 func DotInTriangle(p, a, b, c Point, r int64) bool {
-	return DotInPlane(p, a, b, c, r) && inplaneDotInTriangle(p, a, b, c)
+	return DotInPlane(p, a, b, c, r) && inplaneDotInTriangle(p, a, b, c, r)
 }
