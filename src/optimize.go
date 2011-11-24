@@ -484,7 +484,26 @@ func WriteNptl(vol BoolVoxelVolume, output io.Writer) (err os.Error) {
 	return
 }
 
-func ReadSTL(r io.Reader) (vol BoolVoxelVolume, err os.Error) {
+func readUint32le(r io.Reader) (res uint32, err os.Error) {
+	var a [4]byte
+	if _, err = io.ReadFull(r, a[:]); err != nil {
+		return
+	}
+	return uint32(a[0]) + uint32(a[1])<<8 + uint32(a[2])<<16 + uint32(a[3])<<24, nil
+}
+
+type STLPoint [3]float32
+
+type STLTriangle struct {
+	n STLPoint
+	v [3]STLPoint
+}
+
+func ReadSTLPoint(r io.Reader) (p STLPoint, err os.Error) {
+	panic("ReadSTLPoint not implemented")
+}
+
+func ReadSTL(r io.Reader) (t []STLTriangle, err os.Error) {
 	var magic [5]byte
 	if _, err = io.ReadFull(r, magic[:]); err != nil {
 		return
@@ -496,7 +515,28 @@ func ReadSTL(r io.Reader) (vol BoolVoxelVolume, err os.Error) {
 	if _, err = io.ReadFull(r, header[:]); err != nil {
 		return
 	}
-	panic("ReadSTL: binary format is not implemented")
+	var n uint32
+	if n, err = readUint32le(r); err != nil {
+		return
+	}
+	t = make([]STLTriangle, n)[:0]
+	for i := 0; i < int(n); i++ {
+		var cur STLTriangle
+		if cur.n, err = ReadSTLPoint(r); err != nil {
+			return
+		}
+		for j := 0; j < 3; j++ {
+			if cur.v[j], err = ReadSTLPoint(r); err != nil {
+				return
+			}
+		}
+		var skip [2]byte
+		if _, err = io.ReadFull(r, skip[:]); err != nil {
+			return
+		}
+
+	}
+	return
 }
 
 func main() {
