@@ -26,6 +26,8 @@ const (
 	TAG_COMPOUND   = 10
 
 	SizeOfSTLTriangle = 4*3*4 + 2
+	VoxelSide         = 1024
+	MeshMultiplier    = 1024
 )
 
 type NBTReader struct {
@@ -505,13 +507,13 @@ func readSTLPoint(a []byte, p *STLPoint) []byte {
 }
 
 type Grid struct {
-	p0 [3]float64
-	p1 [3]float64
-	n  [3]int64
+	P0 [3]float64
+	P1 [3]float64
+	N  [3]int64
 }
 
 type Mesh struct {
-	Grid     Grid
+	Grid
 	Triangle []Triangle
 }
 
@@ -545,7 +547,7 @@ func ReadSTL(r io.Reader) (t []STLTriangle, err os.Error) {
 	return
 }
 
-func STLToMesh(triangles []STLTriangle) (m Mesh) {
+func STLToMesh(n int, triangles []STLTriangle) (m Mesh) {
 	min := []float32{math.MaxFloat32, math.MaxFloat32, math.MaxFloat32}
 	max := []float32{-math.MaxFloat32, -math.MaxFloat32, -math.MaxFloat32}
 	for _, t := range triangles {
@@ -561,8 +563,22 @@ func STLToMesh(triangles []STLTriangle) (m Mesh) {
 			}
 		}
 	}
+	m.P0 = [3]float64{float64(min[0]) - 1, float64(min[1]) - 1, float64(min[2]) - 1}
+	m.P1 = [3]float64{float64(max[0]) + 1, float64(max[1]) + 1, float64(max[2]) + 1}
+	m.N = [3]int64{int64(n), int64(n), int64(n)}
+	m.Triangle = make([]Triangle, len(triangles))
+	for i, t := range triangles {
+		cur := &m.Triangle[i]
+		for i := 0; i < 3; i++ {
+			for j := 0; j < 3; j++ {
+				val := float64(t.v[i][j])
+				cur[i][j] = int64((val - m.P0[j]) * float64(m.N[j]) / (m.P1[j] - m.P0[j]))
+			}
+		}
+	}
 	fmt.Fprintf(os.Stderr, "min: %v, max: %v\n", min, max)
-	panic("STLToMesh not implemented")
+	fmt.Fprintf(os.Stderr, "mesh.Grid: %v, mesh.Triangle: %v\n", m.Grid, m.Triangle[:10])
+	return
 }
 
 func Rasterize(m Mesh) (vol BoolVoxelVolume, err os.Error) {
@@ -574,7 +590,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("ReadSTL: %v", err)
 	}
-	mesh := STLToMesh(triangles)
+	mesh := STLToMesh(VoxelSide*MeshMultiplier, triangles)
 	var vol BoolVoxelVolume
 	if vol, err = Rasterize(mesh); err != nil {
 		log.Fatalf("Rasterize: %v", err)
