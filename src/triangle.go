@@ -111,21 +111,32 @@ func adjacent(p Point) (res []Point) {
 	return
 }
 
+func to(a, n int64) int64 {
+	if a >= 0 {
+		return (a + (n-1)/2) / n
+	}
+	return -((-a + n/2) / n)
+}
+
 func toGrid(p Point, scale int64) Point {
-	return Point{p[0] / scale, p[1] / scale, p[2] / scale}
+	return Point{to(p[0], scale), to(p[1], scale), to(p[2], scale)}
 }
 
 func fromGrid(p Point, scale int64) Point {
-	return Point{p[0]*scale + scale/2, p[1]*scale + scale/2, p[2]*scale + scale/2}
+	return Point{p[0] * scale, p[1] * scale, p[2] * scale}
 }
 
 func AllTriangleDots(a, b, c Point, scale, r int64) (res []Point) {
-	q := []Point{toGrid(a, scale), toGrid(b, scale), toGrid(c, scale)}
+	ga := toGrid(a, scale)
+	gb := toGrid(b, scale)
+	gc := toGrid(c, scale)
+	r = r * scale
+	q := []Point{ga, gb, gc}
 	var q2 []Point
 	m := make(map[uint64]Point)
-	m[hash(a)] = a
-	m[hash(b)] = b
-	m[hash(c)] = c
+	m[hash(ga)] = ga
+	m[hash(gb)] = gb
+	m[hash(gc)] = gc
 	for len(q) > 0 {
 		q, q2 = q2[0:0], q
 		for _, p := range q2 {
