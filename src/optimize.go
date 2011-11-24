@@ -9,6 +9,7 @@ import (
 	"log"
 	"math"
 	"os"
+	"unsafe"
 )
 
 const (
@@ -496,16 +497,17 @@ type STLTriangle struct {
 
 func readSTLPoint(a []byte, p *STLPoint) []byte {
 	for i := 0; i < 3; i++ {
-		p[i] = float32(uint32(a[0]) + uint32(a[1])<<8 + uint32(a[2])<<16 + uint32(a[3])<<24)
+		cur := uint32(a[0]) + uint32(a[1])<<8 + uint32(a[2])<<16 + uint32(a[3])<<24
+		p[i] = *(*float32)(unsafe.Pointer(&cur))
 		a = a[4:]
 	}
 	return a
 }
 
 type Grid struct {
-	nx, ny, nz int64
-	x0, y0, z0 float64
-	x1, y1, z1 float64
+	p0 [3]float64
+	p1 [3]float64
+	n  [3]int64
 }
 
 type Mesh struct {
@@ -538,11 +540,28 @@ func ReadSTL(r io.Reader) (t []STLTriangle, err os.Error) {
 			data = readSTLPoint(data, &cur.v[j])
 		}
 		data = data[2:]
+		t = append(t, cur)
 	}
 	return
 }
 
-func STLToMesh(t []STLTriangle) (m Mesh) {
+func STLToMesh(triangles []STLTriangle) (m Mesh) {
+	min := []float32{math.MaxFloat32, math.MaxFloat32, math.MaxFloat32}
+	max := []float32{-math.MaxFloat32, -math.MaxFloat32, -math.MaxFloat32}
+	for _, t := range triangles {
+		for i := 0; i < 3; i++ {
+			for j := 0; j < 3; j++ {
+				cur := t.v[i][j]
+				if min[j] > cur {
+					min[j] = cur
+				}
+				if max[j] < cur {
+					max[j] = cur
+				}
+			}
+		}
+	}
+	fmt.Fprintf(os.Stderr, "min: %v, max: %v\n", min, max)
 	panic("STLToMesh not implemented")
 }
 
