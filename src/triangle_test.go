@@ -198,8 +198,9 @@ func TestTriangle(t *testing.T) {
 }
 
 type allTriangleDotsTest struct {
-	t [3]Point
-	p []Point
+	t     [3]Point
+	p     []Point
+	scale int64
 }
 
 var allTriangleDotsTests = []allTriangleDotsTest{
@@ -210,6 +211,7 @@ var allTriangleDotsTests = []allTriangleDotsTest{
 			{1, 0, 0},
 			{0, 1, 0},
 		},
+		1,
 	},
 	{
 		mediumRectTriangle,
@@ -230,6 +232,7 @@ var allTriangleDotsTests = []allTriangleDotsTest{
 			{3, 1, 0},
 			{4, 0, 0},
 		},
+		1,
 	},
 }
 
@@ -239,7 +242,7 @@ func TestAllTriangleDots(t *testing.T) {
 		for _, p := range test.p {
 			m[hash(p)] = p
 		}
-		pt := AllTriangleDots(test.t[0], test.t[1], test.t[2], 1)
+		pt := AllTriangleDots(test.t[0], test.t[1], test.t[2], test.scale, 1)
 		if len(pt) != len(test.p) {
 			t.Errorf("Test #%d: number of triangle dots is unexpected. Want: %v, got: %v", ind, test.p, pt)
 			continue
