@@ -484,16 +484,16 @@ func WriteNptl(vol BoolVoxelVolume, output io.Writer) (err os.Error) {
 	return
 }
 
-func ReadSTL(r os.Reader) (vol BoolVoxelVolume, err os.Error) {
+func ReadSTL(r io.Reader) (vol BoolVoxelVolume, err os.Error) {
 	var magic [5]byte
-	if _, err = io.ReadFull(r, magic); err != nil {
+	if _, err = io.ReadFull(r, magic[:]); err != nil {
 		return
 	}
-	if string(magic) == "solid" {
+	if string(magic[:]) == "solid" {
 		panic("ReadSTL: ascii format is not implemented")
 	}
 	var header [75]byte
-	if _, err = io.ReadFull(r, header); err != nil {
+	if _, err = io.ReadFull(r, header[:]); err != nil {
 		return
 	}
 	panic("ReadSTL: binary format is not implemented")
