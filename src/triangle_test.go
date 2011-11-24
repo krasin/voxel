@@ -161,6 +161,12 @@ var (
 			1,
 		},
 		{
+			Point{4, 1, 0},
+			thinTriangle,
+			false,
+			1,
+		},
+		{
 			Point{5, 1, 0},
 			thinTriangle,
 			true,
