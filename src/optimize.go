@@ -5,6 +5,7 @@ import (
 	"compress/gzip"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"math"
 	"os"
@@ -22,6 +23,8 @@ const (
 	TAG_STRING     = 8
 	TAG_LIST       = 9
 	TAG_COMPOUND   = 10
+
+	SizeOfSTLTriangle = 4*3*4 + 2
 )
 
 type NBTReader struct {
@@ -484,14 +487,6 @@ func WriteNptl(vol BoolVoxelVolume, output io.Writer) (err os.Error) {
 	return
 }
 
-func readUint32le(r io.Reader) (res uint32, err os.Error) {
-	var a [4]byte
-	if _, err = io.ReadFull(r, a[:]); err != nil {
-		return
-	}
-	return uint32(a[0]) + uint32(a[1])<<8 + uint32(a[2])<<16 + uint32(a[3])<<24, nil
-}
-
 type STLPoint [3]float32
 
 type STLTriangle struct {
@@ -499,51 +494,61 @@ type STLTriangle struct {
 	v [3]STLPoint
 }
 
-func ReadSTLPoint(r io.Reader) (p STLPoint, err os.Error) {
-	panic("ReadSTLPoint not implemented")
+func readSTLPoint(a []byte, p *STLPoint) []byte {
+	for i := 0; i < 3; i++ {
+		p[i] = float32(uint32(a[0]) + uint32(a[1])<<8 + uint32(a[2])<<16 + uint32(a[3])<<24)
+		a = a[4:]
+	}
+	return a
 }
 
 func ReadSTL(r io.Reader) (t []STLTriangle, err os.Error) {
-	var magic [5]byte
-	if _, err = io.ReadFull(r, magic[:]); err != nil {
+	var data []byte
+	if data, err = ioutil.ReadAll(r); err != nil {
 		return
 	}
-	if string(magic[:]) == "solid" {
+	magic := data[:5]
+	if string(magic) == "solid" {
 		panic("ReadSTL: ascii format is not implemented")
 	}
-	var header [75]byte
-	if _, err = io.ReadFull(r, header[:]); err != nil {
-		return
+	// Skip STL header
+	data = data[80:]
+	n := uint32(data[0]) + uint32(data[1])<<8 + uint32(data[2])<<16 + uint32(data[3])<<24
+	data = data[4:]
+
+	fmt.Fprintf(os.Stderr, "%d triangles\n", n)
+	if len(data) < int(SizeOfSTLTriangle*n) {
+		return nil, fmt.Errorf("ReadSTL: unexpected end of file: want %d bytes to read triangle data, but only %d bytes is available", SizeOfSTLTriangle*n, len(data))
 	}
-	var n uint32
-	if n, err = readUint32le(r); err != nil {
-		return
-	}
-	t = make([]STLTriangle, n)[:0]
 	for i := 0; i < int(n); i++ {
 		var cur STLTriangle
-		if cur.n, err = ReadSTLPoint(r); err != nil {
-			return
-		}
+		data = readSTLPoint(data, &cur.n)
 		for j := 0; j < 3; j++ {
-			if cur.v[j], err = ReadSTLPoint(r); err != nil {
-				return
-			}
+			data = readSTLPoint(data, &cur.v[j])
 		}
-		var skip [2]byte
-		if _, err = io.ReadFull(r, skip[:]); err != nil {
-			return
-		}
-
+		data = data[2:]
 	}
 	return
 }
 
+func RasterizeSTL(t []STLTriangle) (vol BoolVoxelVolume, err os.Error) {
+	panic("RasterizeSTL not implemented")
+}
+
 func main() {
-	vol, err := ReadSchematic(os.Stdin)
+	triangles, err := ReadSTL(os.Stdin)
 	if err != nil {
-		log.Fatalf("ReadSchematic: %v", err)
+		log.Fatalf("ReadSTL: %v", err)
 	}
+	var vol BoolVoxelVolume
+	if vol, err = RasterizeSTL(triangles); err != nil {
+		log.Fatalf("Rasterize: %v", err)
+	}
+
+	/*	vol, err := ReadSchematic(os.Stdin)
+		if err != nil {
+			log.Fatalf("ReadSchematic: %v", err)
+		}*/
 	vol = Optimize(vol, 70)
 	if err = WriteNptl(vol, os.Stdout); err != nil {
 		log.Fatalf("WriteNptl: %v", err)
