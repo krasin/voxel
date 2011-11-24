@@ -6,6 +6,7 @@ import (
 
 type Point [3]int64
 type Vector [3]int64
+type Triangle [3]Point
 
 func NewVector(p1, p2 Point) Vector {
 	return Vector{p2[0] - p1[0], p2[1] - p1[1], p2[2] - p1[2]}

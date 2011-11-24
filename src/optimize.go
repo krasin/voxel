@@ -502,6 +502,17 @@ func readSTLPoint(a []byte, p *STLPoint) []byte {
 	return a
 }
 
+type Grid struct {
+	nx, ny, nz int64
+	x0, y0, z0 float64
+	x1, y1, z1 float64
+}
+
+type Mesh struct {
+	Grid     Grid
+	Triangle []Triangle
+}
+
 func ReadSTL(r io.Reader) (t []STLTriangle, err os.Error) {
 	var data []byte
 	if data, err = ioutil.ReadAll(r); err != nil {
@@ -531,8 +542,12 @@ func ReadSTL(r io.Reader) (t []STLTriangle, err os.Error) {
 	return
 }
 
-func RasterizeSTL(t []STLTriangle) (vol BoolVoxelVolume, err os.Error) {
-	panic("RasterizeSTL not implemented")
+func STLToMesh(t []STLTriangle) (m Mesh) {
+	panic("STLToMesh not implemented")
+}
+
+func Rasterize(m Mesh) (vol BoolVoxelVolume, err os.Error) {
+	panic("Rasterize not implemented")
 }
 
 func main() {
@@ -540,8 +555,9 @@ func main() {
 	if err != nil {
 		log.Fatalf("ReadSTL: %v", err)
 	}
+	mesh := STLToMesh(triangles)
 	var vol BoolVoxelVolume
-	if vol, err = RasterizeSTL(triangles); err != nil {
+	if vol, err = Rasterize(mesh); err != nil {
 		log.Fatalf("Rasterize: %v", err)
 	}
 
