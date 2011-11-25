@@ -171,7 +171,7 @@ func findJ(p1, p2 Point, scale int64) (j uint) {
 		}
 		//		fmt.Fprintf(os.Stderr, "r2: %d, j: %d, scale: %d\n", r2, j, scale)
 		if r2 < (int64(scale)*int64(scale))<<(2*j) {
-			return
+			return j + 1
 		}
 	}
 	panic("unreachable")
