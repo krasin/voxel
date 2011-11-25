@@ -5,6 +5,8 @@ import (
 	"compress/gzip"
 	"fmt"
 	"io"
+	"image"
+	"image/png"
 	"io/ioutil"
 	"log"
 	"math"
@@ -28,6 +30,11 @@ const (
 	SizeOfSTLTriangle = 4*3*4 + 2
 	VoxelSide         = 1024
 	MeshMultiplier    = 1024
+)
+
+var (
+	Black  = image.RGBAColor{0, 0, 0, 255}
+	Yellow = image.RGBAColor{255, 255, 0, 255}
 )
 
 type NBTReader struct {
@@ -407,22 +414,17 @@ func (v *ArrayVolume) GetV(x, y, z int) uint32 {
 	return v.a[v.Index(x, y, z)]
 }
 
-func Optimize(input BoolVoxelVolume, n2 int) BoolVoxelVolume {
-	res := NewArrayVolume(input.XLen(), input.YLen(), input.ZLen())
+func Optimize(vol *ArrayVolume, n2 int) {
 	var q, q2 []int
-	for y := 0; y < input.YLen(); y++ {
-		for z := 0; z < input.ZLen(); z++ {
-			for x := 0; x < input.XLen(); x++ {
-				if !input.Get(x, y, z) {
-					res.Set(x, y, z, 0)
+	for y := 0; y < vol.YLen(); y++ {
+		for z := 0; z < vol.ZLen(); z++ {
+			for x := 0; x < vol.XLen(); x++ {
+				if IsBoundary(vol, x, y, z) && z > 0 {
+					vol.Set(x, y, z, 1)
+					q = append(q, vol.Index(x, y, z))
 					continue
 				}
-				if IsBoundary(input, x, y, z) && z > 0 {
-					res.Set(x, y, z, 1)
-					q = append(q, res.Index(x, y, z))
-					continue
-				}
-				res.Set(x, y, z, math.MaxUint32)
+				vol.Set(x, y, z, math.MaxUint32)
 			}
 		}
 	}
@@ -430,41 +432,41 @@ func Optimize(input BoolVoxelVolume, n2 int) BoolVoxelVolume {
 		fmt.Fprintf(os.Stderr, "len(q): %d\n", len(q))
 		q, q2 = q2[:0], q
 		for _, index := range q2 {
-			x, y, z := res.Coord(index)
-			v := res.GetV(x, y, z)
+			x, y, z := vol.Coord(index)
+			v := vol.GetV(x, y, z)
 			for dx := -1; dx <= 1; dx++ {
 				x1 := x + dx
 				for dy := -1; dy <= 1; dy++ {
 					y1 := y + dy
 					for dz := -1; dz <= 1; dz++ {
 						z1 := z + dz
-						if !res.Get(x1, y1, z1) || dx == 0 && dy == 0 && dz == 0 {
+						if !vol.Get(x1, y1, z1) || dx == 0 && dy == 0 && dz == 0 {
 							continue
 						}
 						r2 := uint32(dx*dx + dy*dy + dz*dz)
-						v1 := res.GetV(x1, y1, z1)
+						v1 := vol.GetV(x1, y1, z1)
 						if v1 > v+r2 {
-							res.Set(x1, y1, z1, v+r2)
-							q = append(q, res.Index(x1, y1, z1))
+							vol.Set(x1, y1, z1, v+r2)
+							q = append(q, vol.Index(x1, y1, z1))
 						}
 					}
 				}
 			}
 		}
 	}
-	for y := 0; y < res.YLen(); y++ {
-		for z := 0; z < res.ZLen(); z++ {
-			for x := 0; x < res.XLen(); x++ {
-				if res.GetV(x, y, z) == math.MaxUint32 {
+	for y := 0; y < vol.YLen(); y++ {
+		for z := 0; z < vol.ZLen(); z++ {
+			for x := 0; x < vol.XLen(); x++ {
+				if vol.GetV(x, y, z) == math.MaxUint32 {
 					panic("unreachable")
 				}
-				if res.GetV(x, y, z) > uint32(n2) {
-					res.Set(x, y, z, 0)
+				if vol.GetV(x, y, z) > uint32(n2) {
+					vol.Set(x, y, z, 0)
 				}
 			}
 		}
 	}
-	return res
+	return
 }
 
 func WriteNptl(vol BoolVoxelVolume, output io.Writer) (err os.Error) {
@@ -581,12 +583,65 @@ func STLToMesh(n int, triangles []STLTriangle) (m Mesh) {
 	return
 }
 
-func Rasterize(m Mesh, n int64) (vol BoolVoxelVolume, err os.Error) {
-	scale := m.N[0] / n
+func Rasterize(m Mesh, n int) *ArrayVolume {
+	scale := m.N[0] / int64(n)
+	vol := NewArrayVolume(n, n, n)
+	// Rasterize edges
 	for _, t := range m.Triangle {
-		AllTriangleDots1(t[0], t[1], t[2], scale, 1)
+		for _, p := range AllTriangleDots1(t[0], t[1], t[2], scale, 1) {
+			vol.Set(int(p[0]), int(p[1]), int(p[2]), 1)
+		}
 	}
-	panic("Rasterize not implemented")
+	in := make([][]bool, n)
+	prevIsDot := make([][]bool, n)
+	for x := 0; x < n; x++ {
+		in[x] = make([]bool, n)
+		prevIsDot[x] = make([]bool, n)
+		for y := 0; y < n; y++ {
+			in[x][y] = vol.Get(x, y, 0)
+		}
+	}
+	var cnt int
+	bmp := image.NewRGBA(n, n)
+	for z := 1; z < n; z++ {
+		for x := 0; x < n; x++ {
+			for y := 0; y < n; y++ {
+				color := Black
+				if vol.Get(x, y, z) {
+					color = Yellow
+				}
+				bmp.Set(x, y, color)
+			}
+		}
+		f, _ := os.OpenFile(fmt.Sprintf("scan-%03d.png", z), os.O_TRUNC|os.O_WRONLY|os.O_CREATE, 0666)
+		png.Encode(f, bmp)
+		f.Close()
+		cnt = 0
+		for x := 0; x < n; x++ {
+			for y := 0; y < n; y++ {
+				if vol.Get(x, y, z) {
+					cnt++
+					if !prevIsDot[x][y] {
+						in[x][y] = !in[x][y]
+					}
+					prevIsDot[x][y] = true
+					continue
+				}
+				prevIsDot[x][y] = false
+				if in[x][y] {
+					cnt++
+					vol.Set(x, y, z, 1)
+					bmp.Set(x, y, Yellow)
+					continue
+				}
+			}
+		}
+		f, _ = os.OpenFile(fmt.Sprintf("zban-%03d.png", z), os.O_TRUNC|os.O_WRONLY|os.O_CREATE, 0666)
+		png.Encode(f, bmp)
+		f.Close()
+	}
+	fmt.Fprintf(os.Stderr, "Last layer: %d dots\n", cnt)
+	return vol
 }
 
 func main() {
@@ -595,16 +650,14 @@ func main() {
 		log.Fatalf("ReadSTL: %v", err)
 	}
 	mesh := STLToMesh(VoxelSide*MeshMultiplier, triangles)
-	var vol BoolVoxelVolume
-	if vol, err = Rasterize(mesh, VoxelSide); err != nil {
-		log.Fatalf("Rasterize: %v", err)
-	}
+
+	vol := Rasterize(mesh, VoxelSide)
 
 	/*	vol, err := ReadSchematic(os.Stdin)
 		if err != nil {
 			log.Fatalf("ReadSchematic: %v", err)
 		}*/
-	vol = Optimize(vol, 70)
+	//	Optimize(vol, 70)
 	if err = WriteNptl(vol, os.Stdout); err != nil {
 		log.Fatalf("WriteNptl: %v", err)
 	}
