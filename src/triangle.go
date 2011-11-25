@@ -2,6 +2,7 @@ package main
 
 import (
 	"big"
+	"sort"
 )
 
 type Point [3]int64
@@ -130,6 +131,7 @@ func AllTriangleDots(a, b, c Point, scale, r int64) (res []Point) {
 	ga := toGrid(a, scale)
 	gb := toGrid(b, scale)
 	gc := toGrid(c, scale)
+
 	r = r * scale
 	q := []Point{ga, gb, gc}
 	var q2 []Point
@@ -157,5 +159,117 @@ func AllTriangleDots(a, b, c Point, scale, r int64) (res []Point) {
 	for _, p := range m {
 		res = append(res, p)
 	}
+	return
+}
+
+func findJ(p1, p2 Point, scale int64) (j uint) {
+	for j = 0; j < 31; j++ {
+		var r2 int64
+		for z := 0; z < 3; z++ {
+			diff := int64(p1[z] - p2[z])
+			r2 += diff * diff
+		}
+		//		fmt.Fprintf(os.Stderr, "r2: %d, j: %d, scale: %d\n", r2, j, scale)
+		if r2 < (int64(scale)*int64(scale))<<(2*j) {
+			return
+		}
+	}
+	panic("unreachable")
+}
+
+func peq(p1, p2 Point) bool {
+	for z := 0; z < 3; z++ {
+		if p1[z] != p2[z] {
+			return false
+		}
+	}
+	return true
+}
+
+type pointSlice []Point
+
+func (ps pointSlice) Len() int {
+	return len(ps)
+}
+
+func (ps pointSlice) Less(i, j int) (res bool) {
+	//	defer func() {
+	//		fmt.Fprintf(os.Stderr, "Less(%d,%d): %v, %v\n", i, j, res, ps)
+	//	}()
+	for z := 0; z < 3; z++ {
+		if ps[i][z] < ps[j][z] {
+			return true
+		}
+		if ps[i][z] > ps[j][z] {
+			return false
+		}
+	}
+	return false
+}
+
+func (ps pointSlice) Swap(i, j int) {
+	//	fmt.Fprintf(os.Stderr, "Swap(%d, %d), before: %v\n", i, j, ps)
+	ps[i], ps[j] = ps[j], ps[i]
+	//	fmt.Fprintf(os.Stderr, "Swap(%d, %d),  after: %v\n", i, j, ps)
+}
+
+func uniq(ps []Point) (res []Point) {
+	res = ps[:0]
+	for i, p := range ps {
+		if i > 0 && peq(ps[i-1], p) {
+			continue
+		}
+		res = append(res, ps[i])
+	}
+	return
+}
+
+func AllTriangleDots1(a, b, c Point, scale, r int64) (res []Point) {
+	//	fmt.Fprintf(os.Stderr, "AllTriangleDots1, 0, a=%v, b=%v, c=%v\n", a, b, c)
+	j0 := findJ(a, c, scale)
+	//	fmt.Fprintf(os.Stderr, "AllTriangleDots1, 10, j0=%d\n", j0)
+	j1 := findJ(a, b, scale)
+	//	fmt.Fprintf(os.Stderr, "AllTriangleDots1, 20, j1=%d\n", j1)
+	m := j0
+	if m < j1 {
+		m = j1
+	}
+	//	fmt.Fprintf(os.Stderr, "AllTriangleDots1, 30, m=%d\n", m)
+	cur0 := -1
+	for i0 := 0; i0 <= 1<<j0; i0++ {
+		ind0 := cur0
+		cur0 = len(res)
+		var last1 Point
+		for i1 := 0; i0*(1<<(m-j0))+i1*(1<<(m-j1)) <= 1<<m; i1++ {
+			if ind0 >= 0 && i1 > 0 {
+				ind0++
+			}
+
+			i2 := 1<<m - i0*(1<<(m-j0)) - i1*(1<<(m-j1))
+			var p Point
+			for z := 0; z < 3; z++ {
+				p[z] = int64(i0)*(int64(1)<<uint(m-j0))*a[z] +
+					int64(i1)*(int64(1)<<uint(m-j1))*b[z] +
+					int64(i2)*c[z]
+				p[z] >>= m
+			}
+			//			fmt.Fprintf(os.Stderr, "AllTriangleDots1, 60, p=%v\n", p)
+			p = toGrid(p, scale)
+			if ind0 >= 0 && ind0 < cur0 && peq(res[ind0], p) {
+				continue
+			}
+			if i1 > 0 && peq(last1, p) {
+				continue
+			}
+			res = append(res, p)
+			last1 = p
+		}
+		//		fmt.Fprintf(os.Stderr, "AllTriangleDots1, 90\n")
+	}
+	//	fmt.Fprintf(os.Stderr, "AllTriangleDots1, 94, res: %v\n", res)
+	sort.Sort(pointSlice(res))
+	//	fmt.Fprintf(os.Stderr, "AllTriangleDots1, 95, res: %v\n", res)
+	res = uniq(res)
+	//	fmt.Fprintf(os.Stderr, "AllTriangleDots1, 100, res: %v\n", res)
 	return
 }
