@@ -581,7 +581,11 @@ func STLToMesh(n int, triangles []STLTriangle) (m Mesh) {
 	return
 }
 
-func Rasterize(m Mesh) (vol BoolVoxelVolume, err os.Error) {
+func Rasterize(m Mesh, n int64) (vol BoolVoxelVolume, err os.Error) {
+	scale := m.N[0] / n
+	for _, t := range m.Triangle {
+		AllTriangleDots1(t[0], t[1], t[2], scale, 1)
+	}
 	panic("Rasterize not implemented")
 }
 
@@ -592,7 +596,7 @@ func main() {
 	}
 	mesh := STLToMesh(VoxelSide*MeshMultiplier, triangles)
 	var vol BoolVoxelVolume
-	if vol, err = Rasterize(mesh); err != nil {
+	if vol, err = Rasterize(mesh, VoxelSide); err != nil {
 		log.Fatalf("Rasterize: %v", err)
 	}
 
