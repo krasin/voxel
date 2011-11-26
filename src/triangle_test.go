@@ -293,3 +293,83 @@ func TestAllTriangleDots(t *testing.T) {
 
 	}
 }
+
+type clipLineTest struct {
+	line Line
+	cube Cube
+	ok   bool
+	res  Line
+}
+
+var (
+	cube10 = Cube{
+		Point{0, 0, 0},
+		Point{10, 10, 10},
+	}
+	lineX100 = Line{
+		Point{0, 0, 0},
+		Point{100, 0, 0},
+	}
+	lineXYZ100 = Line{
+		Point{0, 0, 0},
+		Point{100, 100, 100},
+	}
+	lineMinusX100 = Line{
+		Point{0, 0, 0},
+		Point{-100, 0, 0},
+	}
+	line19 = Line{
+		Point{1, 1, 1},
+		Point{9, 9, 9},
+	}
+
+	clipLineTests = []clipLineTest{
+		{
+			lineX100,
+			cube10,
+			true,
+			Line{
+				Point{0, 0, 0},
+				Point{10, 0, 0},
+			},
+		},
+		{
+			lineXYZ100,
+			cube10,
+			true,
+			Line{
+				Point{0, 0, 0},
+				Point{10, 10, 10},
+			},
+		},
+		{
+			line: lineMinusX100,
+			cube: cube10,
+			ok:   false,
+		},
+		{
+			line19,
+			cube10,
+			true,
+			line19,
+		},
+	}
+)
+
+func TestClipLine(t *testing.T) {
+	for ind, test := range clipLineTests {
+		res, ok := ClipLine(test.line, test.cube)
+		if test.ok && !ok {
+			t.Errorf("Test #%d: Failed to clip line. Test: %v", ind, test)
+			continue
+		}
+		if !test.ok && ok {
+			t.Errorf("Test #%d: Found unexpected intersection with the cube: %v. Test: %v", ind, res, test)
+			continue
+		}
+		if !peq(test.res[0], res[0]) || !peq(test.res[1], res[1]) {
+			t.Errorf("Test #%d: Wrong result. Want: %v, got: %v. Test: %v", ind, res, test.res, test)
+			continue
+		}
+	}
+}

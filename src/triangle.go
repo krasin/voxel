@@ -8,6 +8,8 @@ import (
 type Point [3]int64
 type Vector [3]int64
 type Triangle [3]Point
+type Line [2]Point
+type Cube [2]Point
 
 func NewVector(p1, p2 Point) Vector {
 	return Vector{p2[0] - p1[0], p2[1] - p1[1], p2[2] - p1[2]}
@@ -272,4 +274,102 @@ func AllTriangleDots1(a, b, c Point, scale, r int64) (res []Point) {
 	res = uniq(res)
 	//	fmt.Fprintf(os.Stderr, "AllTriangleDots1, 100, res: %v\n", res)
 	return
+}
+
+func checkAlphaInd(num, den int64, line Line, cube Cube, ind int) bool {
+	p := &cube[0]
+	q := &cube[1]
+	a := &line[0]
+	b := &line[1]
+	if den == 0 {
+		return false
+	}
+	if den < 0 {
+		num = -num
+		den = -den
+	}
+	if num < 0 || num > den {
+		// 0 <= \alpha <= 1
+		return false
+	}
+	left := a[ind]*den + num*(b[ind]-a[ind])
+	if left < p[ind]*den {
+		return false
+	}
+	if left > q[ind]*den {
+		return false
+	}
+	return true
+}
+
+func checkAlpha(num, den int64, line Line, cube Cube) bool {
+	for i := 0; i < 3; i++ {
+		if !checkAlphaInd(num, den, line, cube, i) {
+			return false
+		}
+	}
+	return true
+}
+
+func getAlphaPoint(num, den int64, line Line) (res Point) {
+	for i := 0; i < 3; i++ {
+		// This is not the best thing to do, because we divide on the calculated value.
+		// This can lead to an unpredictable behavior, but we say "fine" for now.
+		res[i] = line[0][i] + (num*(line[1][i]-line[0][i]))/den
+	}
+	return
+}
+
+// Assumtions: line and cube are non-point, cube[1][i] >= cube[0][i], i \in [0,2]
+func ClipLine(line Line, cube Cube) (res Line, ok bool) {
+	p := &cube[0]
+	q := &cube[1]
+	a := &line[0]
+	b := &line[1]
+	var num []int64
+	var den []int64
+	if peq(*p, *q) || peq(*a, *b) {
+		return
+	}
+
+	try := func(n, d int64) {
+		if d < 0 {
+			n = -n
+			d = -d
+		}
+		if checkAlpha(n, d, line, cube) {
+			num = append(num, n)
+			den = append(den, d)
+		}
+	}
+	for i := 0; i < 3; i++ {
+		try(p[i]-a[i], b[i]-a[i])
+		try(q[i]-a[i], b[i]-a[i])
+	}
+	try(0, 1)
+	try(1, 1)
+	//	fmt.Printf("num: %v, den: %v\n", num, den)
+
+	ind := -1
+	for i := 1; i < len(num); i++ {
+		if num[i]*den[0] != num[0]*den[i] {
+			ind = i
+			break
+		}
+	}
+	if ind == -1 {
+		return
+	}
+	num[1] = num[ind]
+	den[1] = den[ind]
+	num = num[:2]
+	den = den[:2]
+	//	fmt.Printf("ready, num: %v, den: %v\n", num, den)
+	if num[1]*den[0] < num[0]*den[1] {
+		num[0], num[1] = num[1], num[0]
+		den[0], den[1] = den[1], den[0]
+	}
+	res[0] = getAlphaPoint(num[0], den[0], line)
+	res[1] = getAlphaPoint(num[1], den[1], line)
+	return res, true
 }
