@@ -651,6 +651,13 @@ func main() {
 	}
 	mesh := STLToMesh(VoxelSide*MeshMultiplier, triangles)
 
+	volume := MeshVolume(mesh.Triangle, 1)
+	if volume < 0 {
+		volume = -volume
+	}
+	fmt.Fprintf(os.Stderr, "Mesh volume (in mesh units): %d\n", volume)
+	fmt.Fprintf(os.Stderr, "Mesh volume (original units): %f\n", float64(volume)/float64(mesh.N[0]*mesh.N[1]*mesh.N[2])*(mesh.P1[0]-mesh.P0[0])*(mesh.P1[1]-mesh.P0[1])*(mesh.P1[2]-mesh.P0[2]))
+
 	vol := Rasterize(mesh, VoxelSide)
 
 	/*	vol, err := ReadSchematic(os.Stdin)
