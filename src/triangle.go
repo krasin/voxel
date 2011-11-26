@@ -384,3 +384,15 @@ func ClipTriangle(triangle Triangle, cube Cube, scale int64) (res []Point, ok bo
 	}
 	return res, len(res) > 2
 }
+
+func det3(v0, v1, v2 Vector) int64 {
+	return v0[0]*v1[1]*v2[2] + v0[1]*v1[2]*v2[0] + v0[2]*v1[0]*v2[1] -
+		v0[0]*v1[2]*v2[1] - v0[1]*v1[0]*v2[2] - v0[2]*v1[1]*v2[0]
+}
+
+func MeshVolume(triangles []Triangle, scale int64) (res int64) {
+	for _, t := range triangles {
+		res += det3(Vector(t[0]), Vector(t[1]), Vector(t[2]))
+	}
+	return res / 6
+}
