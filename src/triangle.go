@@ -370,3 +370,17 @@ func ClipLine(line Line, cube Cube, scale int64) (res Line, ok bool) {
 
 	return res, true
 }
+
+func ClipTriangle(triangle Triangle, cube Cube, scale int64) (res []Point, ok bool) {
+	for i := 0; i < 3; i++ {
+		line := Line{triangle[i], triangle[(i+1)%3]}
+		if p, ok := ClipLine(line, cube, scale); ok {
+			res = append(res, p[0], p[1])
+		}
+	}
+	res = uniq(res)
+	if len(res) > 1 && peq(res[0], res[len(res)-1]) {
+		res = res[:len(res)-1]
+	}
+	return res, len(res) > 2
+}

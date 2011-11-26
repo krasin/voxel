@@ -404,3 +404,85 @@ func TestClipLine(t *testing.T) {
 		}
 	}
 }
+
+type clipTriangleTest struct {
+	triangle Triangle
+	cube     Cube
+	ok       bool
+	scale    int64
+	res      []Point
+}
+
+var (
+	clipTriangleTests = []clipTriangleTest{
+		{
+			Triangle{
+				Point{0, 0, 0},
+				Point{5, 10, 0},
+				Point{10, 0, 0},
+			},
+			cube10,
+			true,
+			1,
+			[]Point{
+				{0, 0, 0},
+				{5, 10, 0},
+				{10, 0, 0},
+			},
+		},
+		{
+			Triangle{
+				Point{0, 0, 0},
+				Point{0, 0, 10},
+				Point{-10, 10, 5},
+			},
+			cube10,
+			false,
+			1,
+			[]Point{},
+		},
+		{
+			Triangle{
+				Point{-5, 5, 0},
+				Point{-5, 5, 10},
+				Point{15, 5, 5},
+			},
+			cube10,
+			true,
+			2,
+			[]Point{
+				{0, 5, 9},
+				{10, 5, 6},
+				{10, 5, 4},
+				{0, 5, 1},
+			},
+		},
+	}
+)
+
+func TestClipTriangle(t *testing.T) {
+	for ind, test := range clipTriangleTests {
+		res, ok := ClipTriangle(test.triangle, test.cube, test.scale)
+		if test.ok && !ok {
+			t.Errorf("Test #%d: no intersection found. Test: %v", ind, test)
+			continue
+		}
+		if !test.ok && ok {
+			t.Errorf("Test #%d: unexpected intersection found: %v. Test: %v", ind, res, test)
+			continue
+		}
+		if !test.ok {
+			continue
+		}
+		if len(res) != len(test.res) {
+			t.Errorf("Test #%d: different number of points. Want: %v, got: %v. Test: %v", ind, test.res, res, test)
+			continue
+		}
+		for i := range res {
+			if !peq(res[i], test.res[i]) {
+				t.Errorf("Test #%d, point #%d: wrong result. Want: %v, got: %v. Test: %v", ind, i, test.res, res, test)
+				break
+			}
+		}
+	}
+}
