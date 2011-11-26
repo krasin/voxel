@@ -295,10 +295,11 @@ func TestAllTriangleDots(t *testing.T) {
 }
 
 type clipLineTest struct {
-	line Line
-	cube Cube
-	ok   bool
-	res  Line
+	line  Line
+	cube  Cube
+	ok    bool
+	scale int64
+	res   Line
 }
 
 var (
@@ -328,6 +329,7 @@ var (
 			lineX100,
 			cube10,
 			true,
+			1,
 			Line{
 				Point{0, 0, 0},
 				Point{10, 0, 0},
@@ -337,28 +339,57 @@ var (
 			lineXYZ100,
 			cube10,
 			true,
+			1,
 			Line{
 				Point{0, 0, 0},
 				Point{10, 10, 10},
 			},
 		},
 		{
-			line: lineMinusX100,
-			cube: cube10,
-			ok:   false,
+			line:  lineMinusX100,
+			cube:  cube10,
+			ok:    false,
+			scale: 1,
 		},
 		{
 			line19,
 			cube10,
 			true,
+			1,
 			line19,
+		},
+		{
+			Line{
+				Point{-10, 5, 4},
+				Point{20, 5, 5},
+			},
+			cube10,
+			true,
+			3,
+			Line{
+				Point{0, 5, 4},
+				Point{10, 5, 5},
+			},
+		},
+		{
+			Line{
+				Point{-10, 5, 4},
+				Point{20, 5, 5},
+			},
+			cube10,
+			true,
+			1000,
+			Line{
+				Point{0, 5, 4},
+				Point{10, 5, 5},
+			},
 		},
 	}
 )
 
 func TestClipLine(t *testing.T) {
 	for ind, test := range clipLineTests {
-		res, ok := ClipLine(test.line, test.cube)
+		res, ok := ClipLine(test.line, test.cube, test.scale)
 		if test.ok && !ok {
 			t.Errorf("Test #%d: Failed to clip line. Test: %v", ind, test)
 			continue
@@ -368,7 +399,7 @@ func TestClipLine(t *testing.T) {
 			continue
 		}
 		if !peq(test.res[0], res[0]) || !peq(test.res[1], res[1]) {
-			t.Errorf("Test #%d: Wrong result. Want: %v, got: %v. Test: %v", ind, res, test.res, test)
+			t.Errorf("Test #%d: Wrong result. Want: %v, got: %v. Test: %v", ind, test.res, res, test)
 			continue
 		}
 	}

@@ -125,7 +125,7 @@ func toGrid(p Point, scale int64) Point {
 	return Point{to(p[0], scale), to(p[1], scale), to(p[2], scale)}
 }
 
-func fromGrid(p Point, scale int64) Point {
+func scalePoint(p Point, scale int64) Point {
 	return Point{p[0] * scale, p[1] * scale, p[2] * scale}
 }
 
@@ -149,7 +149,7 @@ func AllTriangleDots(a, b, c Point, scale, r int64) (res []Point) {
 					continue
 				}
 
-				if !DotInTriangle(fromGrid(p2, scale), a, b, c, r) {
+				if !DotInTriangle(scalePoint(p2, scale), a, b, c, r) {
 					continue
 				}
 				m[hash(p2)] = p2
@@ -276,11 +276,7 @@ func AllTriangleDots1(a, b, c Point, scale, r int64) (res []Point) {
 	return
 }
 
-func checkAlphaInd(num, den int64, line Line, cube Cube, ind int) bool {
-	p := &cube[0]
-	q := &cube[1]
-	a := &line[0]
-	b := &line[1]
+func checkAlphaInd(num, den int64, a, b, p, q *Point, ind int) bool {
 	if den == 0 {
 		return false
 	}
@@ -302,33 +298,33 @@ func checkAlphaInd(num, den int64, line Line, cube Cube, ind int) bool {
 	return true
 }
 
-func checkAlpha(num, den int64, line Line, cube Cube) bool {
+func checkAlpha(num, den int64, a, b, p, q *Point) bool {
 	for i := 0; i < 3; i++ {
-		if !checkAlphaInd(num, den, line, cube, i) {
+		if !checkAlphaInd(num, den, a, b, p, q, i) {
 			return false
 		}
 	}
 	return true
 }
 
-func getAlphaPoint(num, den int64, line Line) (res Point) {
+func getAlphaPoint(num, den int64, a, b *Point) (res Point) {
 	for i := 0; i < 3; i++ {
 		// This is not the best thing to do, because we divide on the calculated value.
 		// This can lead to an unpredictable behavior, but we say "fine" for now.
-		res[i] = line[0][i] + (num*(line[1][i]-line[0][i]))/den
+		res[i] = a[i] + (num*(b[i]-a[i]))/den
 	}
 	return
 }
 
 // Assumtions: line and cube are non-point, cube[1][i] >= cube[0][i], i \in [0,2]
-func ClipLine(line Line, cube Cube) (res Line, ok bool) {
-	p := &cube[0]
-	q := &cube[1]
-	a := &line[0]
-	b := &line[1]
+func ClipLine(line Line, cube Cube, scale int64) (res Line, ok bool) {
+	p := scalePoint(cube[0], scale)
+	q := scalePoint(cube[1], scale)
+	a := scalePoint(line[0], scale)
+	b := scalePoint(line[1], scale)
 	var num []int64
 	var den []int64
-	if peq(*p, *q) || peq(*a, *b) {
+	if peq(p, q) || peq(a, b) {
 		return
 	}
 
@@ -337,7 +333,7 @@ func ClipLine(line Line, cube Cube) (res Line, ok bool) {
 			n = -n
 			d = -d
 		}
-		if checkAlpha(n, d, line, cube) {
+		if checkAlpha(n, d, &a, &b, &p, &q) {
 			num = append(num, n)
 			den = append(den, d)
 		}
@@ -369,7 +365,8 @@ func ClipLine(line Line, cube Cube) (res Line, ok bool) {
 		num[0], num[1] = num[1], num[0]
 		den[0], den[1] = den[1], den[0]
 	}
-	res[0] = getAlphaPoint(num[0], den[0], line)
-	res[1] = getAlphaPoint(num[1], den[1], line)
+	res[0] = toGrid(getAlphaPoint(num[0], den[0], &a, &b), scale)
+	res[1] = toGrid(getAlphaPoint(num[1], den[1], &a, &b), scale)
+
 	return res, true
 }
