@@ -457,6 +457,24 @@ var (
 				{0, 5, 1},
 			},
 		},
+		{
+			Triangle{
+				Point{1, 11, 5},
+				Point{1, -1, 5},
+				Point{15, 5, 5},
+			},
+			cube10,
+			true,
+			10,
+			[]Point{
+				Point{1, 10, 5},
+				Point{1, 0, 5},
+				Point{3, 0, 5},
+				Point{10, 3, 5},
+				Point{10, 7, 5},
+				Point{3, 10, 5},
+			},
+		},
 	}
 )
 
