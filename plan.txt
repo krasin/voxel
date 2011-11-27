@@ -31,3 +31,8 @@ Optimize plan:
 4. Make a hole (done)
 5. Implement voxelization
 
+Esoteric knowledge:
+
+1. ClipTriangle is broken. See the tests
+2. Wavelet rasterization: triangle should go into one octant if it's exactly on the side to avoid double counting.
+3. Wavelet rasterization: formulas for 3d case are suspicious in the article, because {K,L}_{y,z} are not used.
