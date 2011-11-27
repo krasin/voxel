@@ -371,12 +371,38 @@ func ClipLine(line Line, cube Cube, scale int64) (res Line, ok bool) {
 	return res, true
 }
 
+var edges = [][6]int64{
+	{0, 0, 0, 1, 0, 0},
+	{0, 0, 0, 0, 1, 0},
+	{0, 0, 0, 0, 0, 1},
+	{0, 1, 1, 1, 1, 1},
+	{0, 1, 1, 0, 0, 1},
+	{0, 1, 1, 0, 1, 0},
+	{1, 1, 0, 0, 1, 0},
+	{1, 1, 0, 1, 0, 0},
+	{1, 1, 0, 1, 1, 1},
+	{1, 0, 1, 0, 0, 1},
+	{1, 0, 1, 1, 1, 1},
+	{1, 0, 1, 1, 0, 0},
+}
+
 func ClipTriangle(triangle Triangle, cube Cube, scale int64) (res []Point, ok bool) {
 	for i := 0; i < 3; i++ {
 		line := Line{triangle[i], triangle[(i+1)%3]}
 		if p, ok := ClipLine(line, cube, scale); ok {
 			res = append(res, p[0], p[1])
 		}
+	}
+	// It's also possible that triangle crosses one of cube's edges.
+	// In this case, the crossing point becomes one of the vertices of the
+	// clipped polygon.
+	for _, e := range edges {
+		var edge Line
+		for i := 0; i < 3; i++ {
+			edge[0][i] = (1-e[i])*cube[0][i] + e[i]*cube[1][i]
+			edge[1][i] = (1-e[i+3])*cube[0][i] + e[i+3]*cube[1][i]
+		}
+		panic("crossing edges with triangle: not implemented")
 	}
 	res = uniq(res)
 	if len(res) > 1 && peq(res[0], res[len(res)-1]) {
