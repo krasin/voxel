@@ -36,3 +36,9 @@ Esoteric knowledge:
 1. ClipTriangle is broken. See the tests
 2. Wavelet rasterization: triangle should go into one octant if it's exactly on the side to avoid double counting.
 3. Wavelet rasterization: formulas for 3d case are suspicious in the article, because {K,L}_{y,z} are not used.
+
+Rasterization is hard. 
+1. Evaluate binvox again. Probably, it has an appropriate output format.
+2. Need to find another rasterizer (an utility or the library), if binvox is not an option
+
+TODO: implement rasterizer later, much later.
