@@ -380,14 +380,14 @@ func Normal(vol BoolVoxelVolume, x, y, z int) (nx, ny, nz float64) {
 }
 
 type ArrayVolume struct {
-	a                []uint32
+	a                []uint16
 	xlen, ylen, zlen int
 }
 
 func NewArrayVolume(xlen, ylen, zlen int) *ArrayVolume {
 	l := xlen * ylen * zlen
 	return &ArrayVolume{
-		a:    make([]uint32, l),
+		a:    make([]uint16, l),
 		xlen: xlen,
 		ylen: ylen,
 		zlen: zlen,
@@ -426,15 +426,15 @@ func (v *ArrayVolume) Get(x, y, z int) bool {
 	return v.a[v.Index(x, y, z)] != 0
 }
 
-func (v *ArrayVolume) Set(x, y, z int, val uint32) {
+func (v *ArrayVolume) Set(x, y, z int, val uint16) {
 	v.a[v.Index(x, y, z)] = val
 }
 
-func (v *ArrayVolume) GetV(x, y, z int) uint32 {
+func (v *ArrayVolume) GetV(x, y, z int) uint16 {
 	return v.a[v.Index(x, y, z)]
 }
 
-func Optimize(vol *ArrayVolume, n2 int) {
+func Optimize(vol *ArrayVolume, n int) {
 	var q, q2 []int
 	for y := 0; y < vol.YLen(); y++ {
 		for z := 0; z < vol.ZLen(); z++ {
@@ -444,7 +444,7 @@ func Optimize(vol *ArrayVolume, n2 int) {
 					q = append(q, vol.Index(x, y, z))
 					continue
 				}
-				vol.Set(x, y, z, math.MaxUint32)
+				vol.Set(x, y, z, math.MaxUint16)
 			}
 		}
 	}
@@ -463,7 +463,7 @@ func Optimize(vol *ArrayVolume, n2 int) {
 						if !vol.Get(x1, y1, z1) || dx == 0 && dy == 0 && dz == 0 {
 							continue
 						}
-						r2 := uint32(dx*dx + dy*dy + dz*dz)
+						r2 := uint16(math.Sqrt(float64(dx*dx + dy*dy + dz*dz)))
 						v1 := vol.GetV(x1, y1, z1)
 						if v1 > v+r2 {
 							vol.Set(x1, y1, z1, v+r2)
@@ -477,10 +477,10 @@ func Optimize(vol *ArrayVolume, n2 int) {
 	for y := 0; y < vol.YLen(); y++ {
 		for z := 0; z < vol.ZLen(); z++ {
 			for x := 0; x < vol.XLen(); x++ {
-				if vol.GetV(x, y, z) == math.MaxUint32 {
+				if vol.GetV(x, y, z) == math.MaxUint16 {
 					panic("unreachable")
 				}
-				if vol.GetV(x, y, z) > uint32(n2) {
+				if vol.GetV(x, y, z) > uint16(n) {
 					vol.Set(x, y, z, 0)
 				}
 			}
@@ -611,7 +611,7 @@ func STLToMesh(n int, triangles []STLTriangle) (m Mesh) {
 }
 
 type VolumeSetter interface {
-	Set(x, y, z int, val uint32)
+	Set(x, y, z int, val uint16)
 }
 
 func Rasterize(m Mesh, n int) *ArrayVolume {
@@ -714,7 +714,7 @@ func main() {
 		if err != nil {
 			log.Fatalf("ReadSchematic: %v", err)
 		}*/
-	//	Optimize(vol, 70)
+	//	Optimize(vol, 20)
 	if err = WriteNptl(vol, mesh.Grid, os.Stdout); err != nil {
 		log.Fatalf("WriteNptl: %v", err)
 	}
