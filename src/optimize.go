@@ -635,6 +635,7 @@ func Rasterize(m Mesh, n int) *ArrayVolume {
 	for index, t := range m.Triangle {
 		AllTriangleDots1(t[0], t[1], t[2], scale, vol, uint16(1+(index%10)))
 	}
+	fmt.Fprintf(os.Stderr, "Triangle rasterization complete\n")
 	in := make([][]bool, n)
 	prevIsDot := make([][]bool, n)
 	in2 := make([]bool, n)
