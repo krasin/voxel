@@ -35,10 +35,30 @@ const (
 var (
 	Black  = image.RGBAColor{0, 0, 0, 255}
 	Yellow = image.RGBAColor{255, 255, 0, 255}
+	Green  = image.RGBAColor{0, 255, 0, 255}
 )
 
 type NBTReader struct {
 	r *bufio.Reader
+}
+
+func neighbours4(loc Location, n int64) (res []Location) {
+	add := func(x, y int64) {
+		res = append(res, Location{x, y})
+	}
+	if loc[0] > 0 {
+		add(loc[0]-1, loc[1])
+	}
+	if loc[1] > 0 {
+		add(loc[0], loc[1]-1)
+	}
+	if loc[0] < n-1 {
+		add(loc[0]+1, loc[1])
+	}
+	if loc[1] < n-1 {
+		add(loc[0], loc[1]+1)
+	}
+	return
 }
 
 func NewNBTReader(r io.Reader) (nr *NBTReader, err os.Error) {
@@ -469,8 +489,11 @@ func Optimize(vol *ArrayVolume, n2 int) {
 	return
 }
 
-func WriteNptl(vol BoolVoxelVolume, output io.Writer) (err os.Error) {
+func WriteNptl(vol BoolVoxelVolume, grid Grid, output io.Writer) (err os.Error) {
 	v := 0
+	stepX := (grid.P1[0] - grid.P0[0]) / float64(grid.N[0])
+	stepY := (grid.P1[1] - grid.P0[1]) / float64(grid.N[1])
+	stepZ := (grid.P1[2] - grid.P0[2]) / float64(grid.N[2])
 	for y := 0; y < vol.YLen(); y++ {
 		for z := 0; z < vol.ZLen(); z++ {
 			for x := 0; x < vol.XLen(); x++ {
@@ -482,7 +505,11 @@ func WriteNptl(vol BoolVoxelVolume, output io.Writer) (err os.Error) {
 					continue
 				}
 				nx, ny, nz := Normal(vol, x, y, z)
-				if _, err = fmt.Fprintf(output, "%f %f %f %f %f %f\n", float64(x), float64(y), float64(z), nx, ny, nz); err != nil {
+				if _, err = fmt.Fprintf(output, "%f %f %f %f %f %f\n",
+					grid.P0[0]+float64(x)*stepX,
+					grid.P0[1]+float64(y)*stepY,
+					grid.P0[2]+float64(z)*stepZ,
+					nx, ny, nz); err != nil {
 					return
 				}
 			}
@@ -594,6 +621,9 @@ func Rasterize(m Mesh, n int) *ArrayVolume {
 	}
 	in := make([][]bool, n)
 	prevIsDot := make([][]bool, n)
+	in2 := make([]bool, n)
+	prevIsDot2 := make([]bool, n)
+
 	for x := 0; x < n; x++ {
 		in[x] = make([]bool, n)
 		prevIsDot[x] = make([]bool, n)
@@ -603,8 +633,11 @@ func Rasterize(m Mesh, n int) *ArrayVolume {
 	}
 	var cnt int
 	bmp := image.NewRGBA(n, n)
+	var q, q2 []Location
 	for z := 1; z < n; z++ {
 		for x := 0; x < n; x++ {
+			in2[x] = false
+			prevIsDot2[x] = false
 			for y := 0; y < n; y++ {
 				color := Black
 				if vol.Get(x, y, z) {
@@ -617,25 +650,43 @@ func Rasterize(m Mesh, n int) *ArrayVolume {
 		png.Encode(f, bmp)
 		f.Close()
 		cnt = 0
+		q = q[:0]
+		q2 = q2[:0]
 		for x := 0; x < n; x++ {
 			for y := 0; y < n; y++ {
-				if vol.Get(x, y, z) {
-					cnt++
-					if !prevIsDot[x][y] {
-						in[x][y] = !in[x][y]
+				if !vol.Get(x, y, z) {
+					if x > 0 && y > 0 && z > 0 && x < n-1 && y < n-1 && z < n-1 {
+						vol.Set(x, y, z, 2)
+					} else {
+						q = append(q, Location{int64(x), int64(y)})
 					}
-					prevIsDot[x][y] = true
-					continue
-				}
-				prevIsDot[x][y] = false
-				if in[x][y] {
-					cnt++
-					vol.Set(x, y, z, 1)
-					bmp.Set(x, y, Yellow)
-					continue
 				}
 			}
 		}
+		for len(q) > 0 {
+			q, q2 = q2[:0], q
+			for _, cur := range q2 {
+				for _, loc := range neighbours4(cur, int64(n)) {
+					if vol.GetV(int(loc[0]), int(loc[1]), z) == 2 {
+						vol.Set(int(loc[0]), int(loc[1]), z, 0)
+						q = append(q, loc)
+					}
+				}
+			}
+		}
+		for x := 0; x < n; x++ {
+			for y := 0; y < n; y++ {
+				switch vol.GetV(x, y, z) {
+				case 1:
+					bmp.Set(x, y, Yellow)
+				case 2:
+					bmp.Set(x, y, Green)
+				default:
+					bmp.Set(x, y, Black)
+				}
+			}
+		}
+
 		f, _ = os.OpenFile(fmt.Sprintf("zban-%03d.png", z), os.O_TRUNC|os.O_WRONLY|os.O_CREATE, 0666)
 		png.Encode(f, bmp)
 		f.Close()
@@ -665,7 +716,7 @@ func main() {
 			log.Fatalf("ReadSchematic: %v", err)
 		}*/
 	//	Optimize(vol, 70)
-	if err = WriteNptl(vol, os.Stdout); err != nil {
+	if err = WriteNptl(vol, mesh.Grid, os.Stdout); err != nil {
 		log.Fatalf("WriteNptl: %v", err)
 	}
 }
