@@ -42,3 +42,7 @@ Rasterization is hard.
 2. Need to find another rasterizer (an utility or the library), if binvox is not an option
 
 TODO: implement rasterizer later, much later.
+
+Naive rasterizer, issues:
+1. Internal hollows are filled
+2. Edge is not continuous
