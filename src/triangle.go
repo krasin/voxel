@@ -3,6 +3,8 @@ package main
 import (
 	"big"
 	"sort"
+	"fmt"
+	"os"
 )
 
 type Point [3]int64
@@ -89,6 +91,58 @@ func inplaneDotInTriangle(p, a, b, c Point, r int64) bool {
 
 func DotInTriangle(p, a, b, c Point, r int64) bool {
 	return DotInPlane(p, a, b, c, r) && inplaneDotInTriangle(p, a, b, c, r)
+}
+
+func DotOnLine(p Point, line Line, r int64) bool {
+	v1 := NewVector(line[0], line[1])
+	v2 := NewVector(line[0], p)
+	v3 := VectorProduct(v1, v2)
+	l3 := len2(v3)
+	l3.Mul(l3, big.NewInt(4))
+	r2 := big.NewInt(r)
+	r2.Mul(r2, r2)
+	r2.Mul(r2, len2(v1))
+	return r2.Cmp(l3) >= 0
+}
+
+func IntersectLines(l1, l2 Line, scale int64) (p Point, ok bool) {
+	panic("IntersectLines is not implemented")
+}
+
+func CrossLineWithTriangle(line Line, triangle Triangle, scale int64) (res []Point) {
+	fmt.Fprintf(os.Stderr, "CrossLineWithTriangle, line: %v, triangle: %v\n", line, triangle)
+	if DotInPlane(line[0], triangle[0], triangle[1], triangle[2], 1) &&
+		DotInPlane(line[1], triangle[0], triangle[1], triangle[2], 1) {
+		if DotInTriangle(line[0], triangle[0], triangle[1], triangle[2], 1) {
+			res = append(res, line[0])
+		}
+		if DotInTriangle(line[1], triangle[0], triangle[1], triangle[2], 1) {
+			res = append(res, line[1])
+		}
+		if len(res) == 2 {
+			return
+		}
+		before := len(res)
+		for i := 0; i < 3; i++ {
+			if DotOnLine(triangle[i], line, 1) {
+				res = append(res, triangle[i])
+			}
+		}
+		sort.Sort(pointSlice(res))
+		res = uniq(res)
+		if before < len(res) {
+			return
+		}
+		for i := 0; i < 3; i++ {
+			if p, ok := IntersectLines(line, Line{triangle[i], triangle[(i+1)%3]}, scale); ok {
+				res = append(res, p)
+			}
+		}
+		sort.Sort(pointSlice(res))
+		res = uniq(res)
+		return
+	}
+	return
 }
 
 func hash(p Point) uint64 {
@@ -402,7 +456,8 @@ func ClipTriangle(triangle Triangle, cube Cube, scale int64) (res []Point, ok bo
 			edge[0][i] = (1-e[i])*cube[0][i] + e[i]*cube[1][i]
 			edge[1][i] = (1-e[i+3])*cube[0][i] + e[i+3]*cube[1][i]
 		}
-		panic("crossing edges with triangle: not implemented")
+		// TODO: we need to add cross points to the proper place 
+		res = append(res, CrossLineWithTriangle(edge, triangle, scale)...)
 	}
 	res = uniq(res)
 	if len(res) > 1 && peq(res[0], res[len(res)-1]) {
