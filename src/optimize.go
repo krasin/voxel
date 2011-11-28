@@ -36,6 +36,20 @@ var (
 	Black  = image.RGBAColor{0, 0, 0, 255}
 	Yellow = image.RGBAColor{255, 255, 0, 255}
 	Green  = image.RGBAColor{0, 255, 0, 255}
+	colors = []image.RGBAColor{
+		{0, 0, 0, 255},
+		{255, 255, 0, 255},
+		{0, 255, 0, 255},
+		{255, 0, 0, 255},
+		{0, 0, 255, 255},
+		{128, 255, 0, 255},
+		{0, 255, 128, 255},
+		{255, 128, 0, 255},
+		{255, 0, 128, 255},
+		{0, 128, 255, 255},
+		{128, 0, 255, 255},
+		{128, 128, 255, 255},
+	}
 )
 
 type NBTReader struct {
@@ -618,8 +632,8 @@ func Rasterize(m Mesh, n int) *ArrayVolume {
 	scale := m.N[0] / int64(n)
 	vol := NewArrayVolume(n, n, n)
 	// Rasterize edges
-	for _, t := range m.Triangle {
-		AllTriangleDots1(t[0], t[1], t[2], scale, vol)
+	for index, t := range m.Triangle {
+		AllTriangleDots1(t[0], t[1], t[2], scale, vol, uint16(1+(index%10)))
 	}
 	in := make([][]bool, n)
 	prevIsDot := make([][]bool, n)
@@ -655,7 +669,7 @@ func Rasterize(m Mesh, n int) *ArrayVolume {
 			for y := 0; y < n; y++ {
 				if !vol.Get(x, y, z) {
 					if x > 0 && y > 0 && z > 0 && x < n-1 && y < n-1 && z < n-1 {
-						vol.Set(x, y, z, 2)
+						vol.Set(x, y, z, 11)
 					} else {
 						q = append(q, Location{int64(x), int64(y)})
 					}
@@ -666,7 +680,7 @@ func Rasterize(m Mesh, n int) *ArrayVolume {
 			q, q2 = q2[:0], q
 			for _, cur := range q2 {
 				for _, loc := range neighbours4(cur, int64(n)) {
-					if vol.GetV(int(loc[0]), int(loc[1]), z) == 2 {
+					if vol.GetV(int(loc[0]), int(loc[1]), z) == 11 {
 						vol.Set(int(loc[0]), int(loc[1]), z, 0)
 						q = append(q, loc)
 					}
@@ -675,12 +689,10 @@ func Rasterize(m Mesh, n int) *ArrayVolume {
 		}
 		for x := 0; x < n; x++ {
 			for y := 0; y < n; y++ {
-				switch vol.GetV(x, y, z) {
-				case 1:
-					bmp.Set(x, y, Yellow)
-				case 2:
-					bmp.Set(x, y, Green)
-				default:
+				v := vol.GetV(x, y, z)
+				if v <= 11 {
+					bmp.Set(x, y, colors[v])
+				} else {
 					bmp.Set(x, y, Black)
 				}
 			}

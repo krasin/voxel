@@ -291,7 +291,7 @@ func scoreDiff(p1, p2 Point) (res int) {
 	return
 }
 
-func AddDot(a, b, c Point, scale int64, vol VolumeSetter, i0, i1 int64, j0, j1 uint, last1 Point) Point {
+func AddDot(a, b, c Point, scale int64, vol VolumeSetter, i0, i1 int64, j0, j1 uint, last1 Point, color uint16) Point {
 	m := j0
 	if m < j1 {
 		m = j1
@@ -331,14 +331,14 @@ func AddDot(a, b, c Point, scale int64, vol VolumeSetter, i0, i1 int64, j0, j1 u
 			//			fmt.Fprintf(os.Stderr, "opa! last2 == p\n")
 			//		}
 		}*/
-	vol.Set(int(p[0]), int(p[1]), int(p[2]), 1)
+	vol.Set(int(p[0]), int(p[1]), int(p[2]), color)
 	//	if scoreDiff(last1, p) > 1 && scoreDiff(last2, p) > 1 {
 	//		fmt.Fprintf(os.Stderr, "Returning bad result. last1: %v, p: %v, last2: %v, i1: %d, j1: %d\n", last1, p, last2, i1, j1)
 	//	}
 	return p
 }
 
-func AllTriangleDots1(a, b, c Point, scale int64, vol VolumeSetter) {
+func AllTriangleDots1(a, b, c Point, scale int64, vol VolumeSetter, color uint16) {
 	//	fmt.Fprintf(os.Stderr, "AllTriangleDots1, 0, a=%v, b=%v, c=%v\n", a, b, c)
 	j0 := findJ(a, c, scale)
 	//	fmt.Fprintf(os.Stderr, "AllTriangleDots1, 10, j0=%d\n", j0)
@@ -352,7 +352,7 @@ func AllTriangleDots1(a, b, c Point, scale int64, vol VolumeSetter) {
 	for i0 := 0; i0 <= 1<<j0; i0++ {
 		var last1 Point
 		for i1 := 0; i0*(1<<(m-j0))+i1*(1<<(m-j1)) <= 1<<m; i1++ {
-			last1 = AddDot(a, b, c, scale, vol, int64(i0), int64(i1), j0, j1, last1)
+			last1 = AddDot(a, b, c, scale, vol, int64(i0), int64(i1), j0, j1, last1, color)
 
 		}
 		//		fmt.Fprintf(os.Stderr, "AllTriangleDots1, 90\n")
