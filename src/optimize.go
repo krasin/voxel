@@ -610,14 +610,16 @@ func STLToMesh(n int, triangles []STLTriangle) (m Mesh) {
 	return
 }
 
+type VolumeSetter interface {
+	Set(x, y, z int, val uint32)
+}
+
 func Rasterize(m Mesh, n int) *ArrayVolume {
 	scale := m.N[0] / int64(n)
 	vol := NewArrayVolume(n, n, n)
 	// Rasterize edges
 	for _, t := range m.Triangle {
-		for _, p := range AllTriangleDots1(t[0], t[1], t[2], scale, 1) {
-			vol.Set(int(p[0]), int(p[1]), int(p[2]), 1)
-		}
+		AllTriangleDots1(t[0], t[1], t[2], scale, vol)
 	}
 	in := make([][]bool, n)
 	prevIsDot := make([][]bool, n)
@@ -646,9 +648,6 @@ func Rasterize(m Mesh, n int) *ArrayVolume {
 				bmp.Set(x, y, color)
 			}
 		}
-		f, _ := os.OpenFile(fmt.Sprintf("scan-%03d.png", z), os.O_TRUNC|os.O_WRONLY|os.O_CREATE, 0666)
-		png.Encode(f, bmp)
-		f.Close()
 		cnt = 0
 		q = q[:0]
 		q2 = q2[:0]
@@ -687,7 +686,7 @@ func Rasterize(m Mesh, n int) *ArrayVolume {
 			}
 		}
 
-		f, _ = os.OpenFile(fmt.Sprintf("zban-%03d.png", z), os.O_TRUNC|os.O_WRONLY|os.O_CREATE, 0666)
+		f, _ := os.OpenFile(fmt.Sprintf("zban-%03d.png", z), os.O_TRUNC|os.O_WRONLY|os.O_CREATE, 0666)
 		png.Encode(f, bmp)
 		f.Close()
 	}
