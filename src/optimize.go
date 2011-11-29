@@ -505,9 +505,9 @@ func Optimize(vol *ArrayVolume, n int) {
 
 func WriteNptl(vol BoolVoxelVolume, grid Grid, output io.Writer) (err os.Error) {
 	v := 0
-	stepX := (grid.P1[0] - grid.P0[0]) / float64(grid.N[0])
-	stepY := (grid.P1[1] - grid.P0[1]) / float64(grid.N[1])
-	stepZ := (grid.P1[2] - grid.P0[2]) / float64(grid.N[2])
+	stepX := (grid.P1[0] - grid.P0[0]) / float64(vol.XLen())
+	stepY := (grid.P1[1] - grid.P0[1]) / float64(vol.YLen())
+	stepZ := (grid.P1[2] - grid.P0[2]) / float64(vol.ZLen())
 	for y := 0; y < vol.YLen(); y++ {
 		for z := 0; z < vol.ZLen(); z++ {
 			for x := 0; x < vol.XLen(); x++ {
