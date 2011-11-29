@@ -727,7 +727,7 @@ func main() {
 		if err != nil {
 			log.Fatalf("ReadSchematic: %v", err)
 		}*/
-	//	Optimize(vol, 20)
+	Optimize(vol, 20)
 	if err = WriteNptl(vol, mesh.Grid, os.Stdout); err != nil {
 		log.Fatalf("WriteNptl: %v", err)
 	}
