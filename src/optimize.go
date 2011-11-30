@@ -658,20 +658,22 @@ func Rasterize(m Mesh, n int) *ArrayVolume {
 				}
 			}
 		}
-		for x := 0; x < n; x++ {
-			for y := 0; y < n; y++ {
-				v := vol.GetV(x, y, z)
-				if v <= 11 {
-					bmp.Set(x, y, colors[v])
-				} else {
-					bmp.Set(x, y, Black)
+		if z%10 == 0 {
+			for x := 0; x < n; x++ {
+				for y := 0; y < n; y++ {
+					v := vol.GetV(x, y, z)
+					if v <= 11 {
+						bmp.Set(x, y, colors[v])
+					} else {
+						bmp.Set(x, y, Black)
+					}
 				}
 			}
-		}
 
-		f, _ := os.OpenFile(fmt.Sprintf("zban-%03d.png", z), os.O_TRUNC|os.O_WRONLY|os.O_CREATE, 0666)
-		png.Encode(f, bmp)
-		f.Close()
+			f, _ := os.OpenFile(fmt.Sprintf("zban-%03d.png", z), os.O_TRUNC|os.O_WRONLY|os.O_CREATE, 0666)
+			png.Encode(f, bmp)
+			f.Close()
+		}
 	}
 	fmt.Fprintf(os.Stderr, "Last layer: %d dots\n", cnt)
 	return vol
@@ -697,7 +699,7 @@ func main() {
 		if err != nil {
 			log.Fatalf("ReadSchematic: %v", err)
 		}*/
-	Optimize(vol, 80)
+	//	Optimize(vol, 80)
 	if err = WriteNptl(vol, mesh.Grid, os.Stdout); err != nil {
 		log.Fatalf("WriteNptl: %v", err)
 	}
