@@ -50,29 +50,14 @@ var (
 		{128, 0, 255, 255},
 		{128, 128, 255, 255},
 	}
+
+	// For neighbours4
+	n4dx = []int{1, 0, -1, 0}
+	n4dy = []int{0, 1, 0, -1}
 )
 
 type NBTReader struct {
 	r *bufio.Reader
-}
-
-func neighbours4(loc Location, n int64) (res []Location) {
-	add := func(x, y int64) {
-		res = append(res, Location{x, y})
-	}
-	if loc[0] > 0 {
-		add(loc[0]-1, loc[1])
-	}
-	if loc[1] > 0 {
-		add(loc[0], loc[1]-1)
-	}
-	if loc[0] < n-1 {
-		add(loc[0]+1, loc[1])
-	}
-	if loc[1] < n-1 {
-		add(loc[0], loc[1]+1)
-	}
-	return
 }
 
 func NewNBTReader(r io.Reader) (nr *NBTReader, err os.Error) {
@@ -680,10 +665,15 @@ func Rasterize(m Mesh, n int) *ArrayVolume {
 		for len(q) > 0 {
 			q, q2 = q2[:0], q
 			for _, cur := range q2 {
-				for _, loc := range neighbours4(cur, int64(n)) {
-					if vol.GetV(int(loc[0]), int(loc[1]), z) == 11 {
-						vol.Set(int(loc[0]), int(loc[1]), z, 0)
-						q = append(q, loc)
+				for i := 0; i < 4; i++ {
+					x1 := int(cur[0]) + n4dx[i]
+					y1 := int(cur[1]) + n4dy[i]
+					if x1 <= 0 || x1 >= n-1 || y1 <= 0 || y1 >= n-1 {
+						continue
+					}
+					if vol.GetV(x1, y1, z) == 11 {
+						vol.Set(x1, y1, z, 0)
+						q = append(q, Location{int64(x1), int64(y1)})
 					}
 				}
 			}
