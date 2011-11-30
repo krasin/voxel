@@ -621,33 +621,11 @@ func Rasterize(m Mesh, n int) *ArrayVolume {
 		AllTriangleDots1(t[0], t[1], t[2], scale, vol, uint16(1+(index%10)))
 	}
 	fmt.Fprintf(os.Stderr, "Triangle rasterization complete\n")
-	in := make([][]bool, n)
-	prevIsDot := make([][]bool, n)
-	in2 := make([]bool, n)
-	prevIsDot2 := make([]bool, n)
 
-	for x := 0; x < n; x++ {
-		in[x] = make([]bool, n)
-		prevIsDot[x] = make([]bool, n)
-		for y := 0; y < n; y++ {
-			in[x][y] = vol.Get(x, y, 0)
-		}
-	}
 	var cnt int
 	bmp := image.NewRGBA(n, n)
 	var q, q2 []Location
 	for z := 1; z < n; z++ {
-		for x := 0; x < n; x++ {
-			in2[x] = false
-			prevIsDot2[x] = false
-			for y := 0; y < n; y++ {
-				color := Black
-				if vol.Get(x, y, z) {
-					color = Yellow
-				}
-				bmp.Set(x, y, color)
-			}
-		}
 		cnt = 0
 		q = q[:0]
 		q2 = q2[:0]
