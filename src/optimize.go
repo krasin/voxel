@@ -438,7 +438,7 @@ func Optimize(vol *ArrayVolume, n int) {
 	for y := 0; y < vol.YLen(); y++ {
 		for z := 0; z < vol.ZLen(); z++ {
 			for x := 0; x < vol.XLen(); x++ {
-				if IsBoundary(vol, x, y, z) && z > 0 {
+				if IsBoundary(vol, x, y, z) && z > 20 {
 					vol.Set(x, y, z, 1)
 					q = append(q, vol.Index(x, y, z))
 					continue
@@ -462,7 +462,7 @@ func Optimize(vol *ArrayVolume, n int) {
 						if !vol.Get(x1, y1, z1) || dx == 0 && dy == 0 && dz == 0 {
 							continue
 						}
-						r2 := uint16(math.Sqrt(float64(dx*dx + dy*dy + dz*dz)))
+						r2 := uint16(math.Sqrt(100 * float64(dx*dx+dy*dy+dz*dz)))
 						v1 := vol.GetV(x1, y1, z1)
 						if v1 > v+r2 {
 							vol.Set(x1, y1, z1, v+r2)
@@ -613,6 +613,8 @@ type VolumeSetter interface {
 	Set(x, y, z int, val uint16)
 }
 
+type Location16 [2]int16
+
 func Rasterize(m Mesh, n int) *ArrayVolume {
 	scale := m.N[0] / int64(n)
 	vol := NewArrayVolume(n, n, n)
@@ -624,7 +626,7 @@ func Rasterize(m Mesh, n int) *ArrayVolume {
 
 	var cnt int
 	bmp := image.NewRGBA(n, n)
-	var q, q2 []Location
+	var q, q2 []Location16
 	for z := 1; z < n; z++ {
 		cnt = 0
 		q = q[:0]
@@ -635,7 +637,7 @@ func Rasterize(m Mesh, n int) *ArrayVolume {
 					if x > 0 && y > 0 && z > 0 && x < n-1 && y < n-1 && z < n-1 {
 						vol.Set(x, y, z, 11)
 					} else {
-						q = append(q, Location{int64(x), int64(y)})
+						q = append(q, Location16{int16(x), int16(y)})
 					}
 				}
 			}
@@ -651,7 +653,7 @@ func Rasterize(m Mesh, n int) *ArrayVolume {
 					}
 					if vol.GetV(x1, y1, z) == 11 {
 						vol.Set(x1, y1, z, 0)
-						q = append(q, Location{int64(x1), int64(y1)})
+						q = append(q, Location16{int16(x1), int16(y1)})
 					}
 				}
 			}
@@ -695,7 +697,7 @@ func main() {
 		if err != nil {
 			log.Fatalf("ReadSchematic: %v", err)
 		}*/
-	Optimize(vol, 20)
+	Optimize(vol, 80)
 	if err = WriteNptl(vol, mesh.Grid, os.Stdout); err != nil {
 		log.Fatalf("WriteNptl: %v", err)
 	}
