@@ -383,6 +383,12 @@ type ArrayVolume struct {
 	xlen, ylen, zlen int
 }
 
+type Uint16Volume interface {
+	BoolVoxelVolume
+	SetV(x, y, z int, v uint16)
+	GetV(x, y, z int) uint16
+}
+
 func NewArrayVolume(xlen, ylen, zlen int) *ArrayVolume {
 	l := xlen * ylen * zlen
 	return &ArrayVolume{
