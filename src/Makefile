@@ -5,6 +5,7 @@ include $(GOROOT)/src/Make.inc
 TARG=optimize
 GOFILES=\
 	locset.go\
+	octree.go\
 	optimize.go\
 	triangle.go\
 
