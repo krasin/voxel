@@ -5,7 +5,7 @@ const primeIndexSize = 1 << 24
 type Octree struct {
 	N        int
 	leafSize int
-	mask     int
+	mask     int64
 	p        [][]uint16
 	v        []uint16
 }
@@ -19,7 +19,7 @@ func NewOctree(N int) *Octree {
 	return &Octree{
 		N:        N,
 		leafSize: N / indexSize,
-		mask:     indexSize - 1,
+		mask:     int64(indexSize - 1),
 		p:        make([][]uint16, indexSize),
 		v:        make([]uint16, indexSize),
 	}
@@ -56,7 +56,7 @@ func (t *Octree) GetV(x, y, z int) uint16 {
 	// If no, we need to go deeper.
 	// This is because we reuse the cell after an expansion.
 	another := index + (1 << (count * 3))
-	if t.v[int(another&int64(t.mask))] == 0 {
+	if another > t.mask || t.v[int(another&t.mask)] == 0 {
 		// This is the leaf
 		return cur
 	}
