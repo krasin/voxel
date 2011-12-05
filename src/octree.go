@@ -44,7 +44,7 @@ func (t *Octree) GetV(x, y, z int) uint16 {
 	l := t.N
 	count := uint(1)
 	base, l, index = step(p, base, l, index)
-	if t.p != nil {
+	if t.p[int(index&int64(t.mask))] != nil {
 		panic("extended part of octree is not implemented")
 	}
 	cur := t.v[int(index&int64(t.mask))]
