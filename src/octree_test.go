@@ -31,6 +31,7 @@ var octreeTests = []octreeTest{
 			{oSet, [3]int{1, 1, 1}, 4},
 			{oSet, [3]int{511, 0, 0}, 5},
 			{oSet, [3]int{511, 511, 511}, 6},
+			{oSet, [3]int{511, 511, 1}, 7},
 		},
 	},
 }

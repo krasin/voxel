@@ -28,8 +28,8 @@ const (
 	TAG_COMPOUND   = 10
 
 	SizeOfSTLTriangle = 4*3*4 + 2
-	VoxelSide         = 1024
-	MeshMultiplier    = 1024
+	VoxelSide         = 512
+	MeshMultiplier    = 2048
 )
 
 var (
@@ -621,9 +621,10 @@ type VolumeSetter interface {
 
 type Location16 [2]int16
 
-func Rasterize(m Mesh, n int) *ArrayVolume {
+func Rasterize(m Mesh, n int) Uint16Volume {
 	scale := m.N[0] / int64(n)
-	vol := NewArrayVolume(n, n, n)
+	//	vol := NewArrayVolume(n, n, n)
+	vol := NewOctree(n)
 	// Rasterize edges
 	for index, t := range m.Triangle {
 		AllTriangleDots1(t[0], t[1], t[2], scale, vol, uint16(1+(index%10)))

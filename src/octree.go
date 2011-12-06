@@ -1,7 +1,7 @@
 package main
 
 import (
-	//	"fmt"
+	"fmt"
 	"math"
 )
 
@@ -25,7 +25,7 @@ type Octree struct {
 	v []uint16
 }
 
-func log2(n int) (res uint) {
+func log2(n int64) (res uint) {
 	for n > 1 {
 		n >>= 1
 		res++
@@ -35,12 +35,13 @@ func log2(n int) (res uint) {
 
 // N must be power of 2.
 func NewOctree(N int) *Octree {
-	volume := 1 << (3 * log2(N))
-	indexSize := volume
-	if indexSize > primeIndexSize {
-		panic("extended part of octree is not implemented")
-		//		indexSize = primeIndexSize
-	}
+	volume := int64(1) << (3 * log2(int64(N)))
+	indexSize := int64(primeIndexSize)
+	//	indexSize := int64(1) << log2(volume)
+	//	if indexSize > primeIndexSize {
+	//		panic("extended part of octree is not implemented")
+	//		//		indexSize = primeIndexSize
+	//	}
 	return &Octree{
 		N:        N,
 		leafSize: int(volume / indexSize),
@@ -52,8 +53,9 @@ func NewOctree(N int) *Octree {
 
 func (t *Octree) internalGet(depth uint, p, base [3]int, l int, index int64) uint16 {
 	if index+octShift[depth] > t.mask {
-		panic("extended part of octree is not implemented")
+		panic(fmt.Sprintf("Octree.internalGet: extended part of octree is not implemented. depth: %d, t.mask: %d, index: %d, index+octShift[depth]: %d, p: %v", depth, t.mask, index, index+octShift[depth], p))
 	}
+	//	fmt.Printf("internalGet, depth: %d, p: %v, base: %v, l: %d, index: %d, t.mask: %d, index+octShift[depth]: %d\n", depth, p, base, l, index, t.mask, index+octShift[depth])
 	arindex := int((index + octShift[depth]) & t.mask)
 	//	if t.p[arindex] != nil {
 	//		panic("extended part of octree is not implemented")
@@ -79,6 +81,9 @@ func (t *Octree) internalGet(depth uint, p, base [3]int, l int, index int64) uin
 }
 
 func (t *Octree) GetV(x, y, z int) uint16 {
+	if x < 0 || y < 0 || z < 0 || x >= t.N || y >= t.N || z >= t.N {
+		return 0
+	}
 	return t.internalGet(0, [3]int{x, y, z}, [3]int{0, 0, 0}, t.N, 0)
 }
 
@@ -99,11 +104,15 @@ func (t *Octree) ZLen() int {
 }
 
 func (t *Octree) internalSet(depth uint, p, base [3]int, l int, index int64, v uint16) {
-	//	fmt.Printf("internalSet(depth=%d, p=%v, base=%v, l=%d, index=%d, v=%d)\n", depth, p, base, l, index, v)
+	//	fmt.Printf("internalSet(depth=%d, p=%v, base=%v, l=%d, index=%d, v=%d)", depth, p, base, l, index, v)
 	if v >= math.MaxUint16-1 {
 		panic("v >= math.MaxUint16-1. These values are reserved")
 	}
+	if index+octShift[depth] > t.mask {
+		panic("extended part of octree is not implemented")
+	}
 	arindex := int((index + octShift[depth]) & t.mask)
+	//	fmt.Printf(", arindex: %d, t.v[arindex] = %d\n", arindex, t.v[arindex])
 	//	if t.p[arindex] != nil {
 	//		panic("extended part of octree is not implemented")
 	//	}
