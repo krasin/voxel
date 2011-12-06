@@ -449,7 +449,7 @@ func Optimize(vol Uint16Volume, n int) {
 					q = append(q, Index(vol, x, y, z))
 					continue
 				}
-				vol.Set(x, y, z, math.MaxUint16)
+				vol.Set(x, y, z, math.MaxUint16-2)
 			}
 		}
 	}
@@ -706,7 +706,7 @@ func main() {
 		if err != nil {
 			log.Fatalf("ReadSchematic: %v", err)
 		}*/
-	//	Optimize(vol, 80)
+	Optimize(vol, 80)
 	if err = WriteNptl(vol, mesh.Grid, os.Stdout); err != nil {
 		log.Fatalf("WriteNptl: %v", err)
 	}
