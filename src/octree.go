@@ -5,7 +5,7 @@ import (
 	"math"
 )
 
-const primeIndexSize = 1 << 25
+const primeIndexSize = 1 << 28
 
 var octShift = calcOctShift(10)
 
@@ -21,31 +21,43 @@ type Octree struct {
 	N        int
 	leafSize int
 	mask     int64
-	p        [][]uint16
-	v        []uint16
+	//	p        [][]uint16
+	v []uint16
+}
+
+func log2(n int) (res uint) {
+	for n > 1 {
+		n >>= 1
+		res++
+	}
+	return
 }
 
 // N must be power of 2.
 func NewOctree(N int) *Octree {
-	volume := int64(N) * int64(N) * int64(N)
+	volume := 1 << (3 * log2(N))
 	indexSize := volume
 	if indexSize > primeIndexSize {
-		indexSize = primeIndexSize
+		panic("extended part of octree is not implemented")
+		//		indexSize = primeIndexSize
 	}
 	return &Octree{
 		N:        N,
 		leafSize: int(volume / indexSize),
 		mask:     int64(indexSize - 1),
-		p:        make([][]uint16, indexSize),
-		v:        make([]uint16, indexSize),
+		//		p:        make([][]uint16, indexSize),
+		v: make([]uint16, indexSize),
 	}
 }
 
 func (t *Octree) internalGet(depth uint, p, base [3]int, l int, index int64) uint16 {
-	arindex := int((index + octShift[depth]) & t.mask)
-	if t.p[arindex] != nil {
+	if index+octShift[depth] > t.mask {
 		panic("extended part of octree is not implemented")
 	}
+	arindex := int((index + octShift[depth]) & t.mask)
+	//	if t.p[arindex] != nil {
+	//		panic("extended part of octree is not implemented")
+	//	}
 	if t.v[arindex] == 0 {
 		return 0
 	}
@@ -92,9 +104,9 @@ func (t *Octree) internalSet(depth uint, p, base [3]int, l int, index int64, v u
 		panic("v >= math.MaxUint16-1. These values are reserved")
 	}
 	arindex := int((index + octShift[depth]) & t.mask)
-	if t.p[arindex] != nil {
-		panic("extended part of octree is not implemented")
-	}
+	//	if t.p[arindex] != nil {
+	//		panic("extended part of octree is not implemented")
+	//	}
 	if l == 1 {
 		t.v[arindex] = v + 2
 		return
@@ -105,6 +117,9 @@ func (t *Octree) internalSet(depth uint, p, base [3]int, l int, index int64, v u
 	case cur == 0:
 		t.v[arindex] = 1
 	case cur == 1:
+	case cur == v+2:
+		// nothing to do
+		return
 	default:
 		// We need to split the cube into 8 smaller cubes and
 		// recurse into one of them
