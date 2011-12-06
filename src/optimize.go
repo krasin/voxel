@@ -385,7 +385,7 @@ type ArrayVolume struct {
 
 type Uint16Volume interface {
 	BoolVoxelVolume
-	SetV(x, y, z int, v uint16)
+	Set(x, y, z int, v uint16)
 	GetV(x, y, z int) uint16
 }
 

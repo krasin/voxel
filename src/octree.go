@@ -70,6 +70,22 @@ func (t *Octree) GetV(x, y, z int) uint16 {
 	return t.internalGet(0, [3]int{x, y, z}, [3]int{0, 0, 0}, t.N, 0)
 }
 
+func (t *Octree) Get(x, y, z int) bool {
+	return t.GetV(x, y, z) != 0
+}
+
+func (t *Octree) XLen() int {
+	return t.N
+}
+
+func (t *Octree) YLen() int {
+	return t.N
+}
+
+func (t *Octree) ZLen() int {
+	return t.N
+}
+
 func (t *Octree) internalSet(depth uint, p, base [3]int, l int, index int64, v uint16) {
 	//	fmt.Printf("internalSet(depth=%d, p=%v, base=%v, l=%d, index=%d, v=%d)\n", depth, p, base, l, index, v)
 	if v >= math.MaxUint16-1 {

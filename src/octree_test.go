@@ -36,7 +36,7 @@ var octreeTests = []octreeTest{
 
 func TestOctree(t *testing.T) {
 	for testInd, test := range octreeTests {
-		tree := NewOctree(test.N)
+		var tree Uint16Volume = NewOctree(test.N)
 		for actInd, act := range test.Action {
 			failed := false
 			switch act.Op {
