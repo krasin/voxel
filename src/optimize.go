@@ -411,15 +411,15 @@ func (v *ArrayVolume) ZLen() int {
 	return v.zlen
 }
 
-func (v *ArrayVolume) Index(x, y, z int) int {
-	return x*v.ylen*v.zlen + y*v.zlen + z
+func Index(vol Uint16Volume, x, y, z int) int {
+	return x*vol.YLen()*vol.ZLen() + y*vol.ZLen() + z
 }
 
-func (v *ArrayVolume) Coord(index int) (x, y, z int) {
-	z = index % v.zlen
-	index /= v.zlen
-	y = index % v.ylen
-	index /= v.ylen
+func Coord(vol Uint16Volume, index int) (x, y, z int) {
+	z = index % vol.ZLen()
+	index /= vol.ZLen()
+	y = index % vol.YLen()
+	index /= vol.YLen()
 	x = index
 	return
 }
@@ -428,25 +428,25 @@ func (v *ArrayVolume) Get(x, y, z int) bool {
 	if x < 0 || y < 0 || z < 0 || x >= v.XLen() || y >= v.YLen() || z >= v.ZLen() {
 		return false
 	}
-	return v.a[v.Index(x, y, z)] != 0
+	return v.a[Index(v, x, y, z)] != 0
 }
 
 func (v *ArrayVolume) Set(x, y, z int, val uint16) {
-	v.a[v.Index(x, y, z)] = val
+	v.a[Index(v, x, y, z)] = val
 }
 
 func (v *ArrayVolume) GetV(x, y, z int) uint16 {
-	return v.a[v.Index(x, y, z)]
+	return v.a[Index(v, x, y, z)]
 }
 
-func Optimize(vol *ArrayVolume, n int) {
+func Optimize(vol Uint16Volume, n int) {
 	var q, q2 []int
 	for y := 0; y < vol.YLen(); y++ {
 		for z := 0; z < vol.ZLen(); z++ {
 			for x := 0; x < vol.XLen(); x++ {
 				if IsBoundary(vol, x, y, z) && z > 20 {
 					vol.Set(x, y, z, 1)
-					q = append(q, vol.Index(x, y, z))
+					q = append(q, Index(vol, x, y, z))
 					continue
 				}
 				vol.Set(x, y, z, math.MaxUint16)
@@ -457,7 +457,7 @@ func Optimize(vol *ArrayVolume, n int) {
 		fmt.Fprintf(os.Stderr, "len(q): %d\n", len(q))
 		q, q2 = q2[:0], q
 		for _, index := range q2 {
-			x, y, z := vol.Coord(index)
+			x, y, z := Coord(vol, index)
 			v := vol.GetV(x, y, z)
 			for dx := -1; dx <= 1; dx++ {
 				x1 := x + dx
@@ -472,7 +472,7 @@ func Optimize(vol *ArrayVolume, n int) {
 						v1 := vol.GetV(x1, y1, z1)
 						if v1 > v+r2 {
 							vol.Set(x1, y1, z1, v+r2)
-							q = append(q, vol.Index(x1, y1, z1))
+							q = append(q, Index(vol, x1, y1, z1))
 						}
 					}
 				}
