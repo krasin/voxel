@@ -25,42 +25,36 @@ func NewOctree(N int) *Octree {
 	}
 }
 
-func step(p, base [3]int, l int, index int64) (nbase [3]int, nl int, nindex int64) {
-	nbase, nl, nindex = base, l>>1, index
-	for i := 0; i < 3; i++ {
-		nindex <<= 1
-		if p[i] >= nbase[i]+nl {
-			nindex++
-			nbase[i] += nl
-		}
-	}
-	return
-}
-
-func (t *Octree) GetV(x, y, z int) uint16 {
-	p := [3]int{x, y, z}
-	base := [3]int{0, 0, 0}
-	var index int64
-	l := t.N
-	count := uint(1)
-	base, l, index = step(p, base, l, index)
-	if t.p[int(index&int64(t.mask))] != nil {
+func (t *Octree) internalGet(depth uint, p [3]int, base [3]int, l int, index int64) uint16 {
+	if t.p[int(index&t.mask)] != nil {
 		panic("extended part of octree is not implemented")
 	}
-	cur := t.v[int(index&int64(t.mask))]
-	if cur == 0 {
+	if t.v[int(index&t.mask)] == 0 {
 		return 0
 	}
-
+	if l == 1 {
+		return t.v[int(index&t.mask)] - 1
+	}
 	// We need to check the neighbour if it has the value of 0 or not.
 	// If no, we need to go deeper.
 	// This is because we reuse the cell after an expansion.
-	another := index + (1 << (count * 3))
+	another := index + (1 << (depth * 3))
 	if another > t.mask || t.v[int(another&t.mask)] == 0 {
 		// This is the leaf
-		return cur
+		return t.v[int(index&t.mask)] - 1
+	}
+	l >>= 1
+	for i := 0; i < 3; i++ {
+		index <<= 1
+		if p[i] >= base[i]+l {
+			index++
+			base[i] += l
+		}
 	}
 
-	// The node is not leaf
-	panic("not implemented")
+	return t.internalGet(depth+1, p, base, l, index)
+}
+
+func (t *Octree) GetV(x, y, z int) uint16 {
+	return t.internalGet(1, [3]int{x, y, z}, [3]int{0, 0, 0}, t.N, 0)
 }
