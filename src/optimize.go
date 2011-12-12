@@ -52,8 +52,12 @@ var (
 	}
 
 	// For neighbours4
-	n4dx = []int{1, 0, -1, 0}
-	n4dy = []int{0, 1, 0, -1}
+	n6dx = []int{1, 0, -1, 0, 0, 0}
+	n6dy = []int{0, 1, 0, -1, 0, 0}
+	n6dz = []int{0, 0, 0, 0, 1, -1}
+
+	n4dx = n6dx[0:4]
+	n4dy = n6dy[0:4]
 )
 
 type NBTReader struct {
@@ -444,12 +448,14 @@ func Optimize(vol Uint16Volume, n int) {
 	for y := 0; y < vol.YLen(); y++ {
 		for z := 0; z < vol.ZLen(); z++ {
 			for x := 0; x < vol.XLen(); x++ {
-				if IsBoundary(vol, x, y, z) && z > 20 {
+				if IsBoundary(vol, x, y, z) && z > 8 {
 					vol.Set(x, y, z, 1)
 					q = append(q, Index(vol, x, y, z))
 					continue
 				}
-				vol.Set(x, y, z, math.MaxUint16-2)
+				if vol.Get(x, y, z) {
+					vol.Set(x, y, z, math.MaxUint16-3)
+				}
 			}
 		}
 	}
@@ -459,22 +465,21 @@ func Optimize(vol Uint16Volume, n int) {
 		for _, index := range q2 {
 			x, y, z := Coord(vol, index)
 			v := vol.GetV(x, y, z)
-			for dx := -1; dx <= 1; dx++ {
-				x1 := x + dx
-				for dy := -1; dy <= 1; dy++ {
-					y1 := y + dy
-					for dz := -1; dz <= 1; dz++ {
-						z1 := z + dz
-						if !vol.Get(x1, y1, z1) || dx == 0 && dy == 0 && dz == 0 {
-							continue
-						}
-						r2 := uint16(math.Sqrt(100 * float64(dx*dx+dy*dy+dz*dz)))
-						v1 := vol.GetV(x1, y1, z1)
-						if v1 > v+r2 {
-							vol.Set(x1, y1, z1, v+r2)
-							q = append(q, Index(vol, x1, y1, z1))
-						}
-					}
+			if v == 0 {
+				panic(fmt.Sprintf("x: %d, y: %d, z: %d, v == 0", x, y, z))
+			}
+			for k := 0; k < 6; k++ {
+				x1 := x + n6dx[k]
+				y1 := y + n6dy[k]
+				z1 := z + n6dz[k]
+				v1 := vol.GetV(x1, y1, z1)
+				if v1 > v+1 && int(v)+1 <= n {
+					vol.Set(x1, y1, z1, v+1)
+					q = append(q, Index(vol, x1, y1, z1))
+					//					v2 := vol.GetV(x1, y1, z1)
+					//					if v2 != v+1 {
+					//						panic(fmt.Sprintf("x1: %d, y1: %d, z1: %d, v: %d, v1: %d, v2: %d", x1, y1, z1, v, v1, v2))
+					//					}
 				}
 			}
 		}
@@ -482,9 +487,9 @@ func Optimize(vol Uint16Volume, n int) {
 	for y := 0; y < vol.YLen(); y++ {
 		for z := 0; z < vol.ZLen(); z++ {
 			for x := 0; x < vol.XLen(); x++ {
-				if vol.GetV(x, y, z) == math.MaxUint16 {
-					panic("unreachable")
-				}
+				//				if vol.GetV(x, y, z) == math.MaxUint16 {
+				//					panic("unreachable")
+				//				}
 				if vol.GetV(x, y, z) > uint16(n) {
 					vol.Set(x, y, z, 0)
 				}
@@ -706,7 +711,7 @@ func main() {
 		if err != nil {
 			log.Fatalf("ReadSchematic: %v", err)
 		}*/
-	Optimize(vol, 80)
+	Optimize(vol, 22)
 	if err = WriteNptl(vol, mesh.Grid, os.Stdout); err != nil {
 		log.Fatalf("WriteNptl: %v", err)
 	}
