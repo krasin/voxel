@@ -1,8 +1,6 @@
 package main
 
 import (
-	"bufio"
-	"compress/gzip"
 	"fmt"
 	"io"
 	"image"
@@ -47,6 +45,13 @@ var (
 	n4dx = n6dx[0:4]
 	n4dy = n6dy[0:4]
 )
+
+type BoolVoxelVolume interface {
+	Get(x, y, z int) bool
+	XLen() int
+	YLen() int
+	ZLen() int
+}
 
 func IsBoundary(vol BoolVoxelVolume, x, y, z int) bool {
 	if !vol.Get(x, y, z) {
@@ -464,10 +469,6 @@ func main() {
 
 	vol := Rasterize(mesh, VoxelSide)
 
-	/*	vol, err := ReadSchematic(os.Stdin)
-		if err != nil {
-			log.Fatalf("ReadSchematic: %v", err)
-		}*/
 	Optimize(vol, 22)
 	if err = WriteNptl(vol, mesh.Grid, os.Stdout); err != nil {
 		log.Fatalf("WriteNptl: %v", err)
