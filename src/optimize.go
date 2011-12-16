@@ -144,37 +144,10 @@ func Normal(vol BoolVoxelVolume, x, y, z int) (nx, ny, nz float64) {
 	return
 }
 
-type ArrayVolume struct {
-	a                []uint16
-	xlen, ylen, zlen int
-}
-
 type Uint16Volume interface {
 	BoolVoxelVolume
 	Set(x, y, z int, v uint16)
 	GetV(x, y, z int) uint16
-}
-
-func NewArrayVolume(xlen, ylen, zlen int) *ArrayVolume {
-	l := xlen * ylen * zlen
-	return &ArrayVolume{
-		a:    make([]uint16, l),
-		xlen: xlen,
-		ylen: ylen,
-		zlen: zlen,
-	}
-}
-
-func (v *ArrayVolume) XLen() int {
-	return v.xlen
-}
-
-func (v *ArrayVolume) YLen() int {
-	return v.ylen
-}
-
-func (v *ArrayVolume) ZLen() int {
-	return v.zlen
 }
 
 func Index(vol Uint16Volume, x, y, z int) int {
@@ -188,21 +161,6 @@ func Coord(vol Uint16Volume, index int) (x, y, z int) {
 	index /= vol.YLen()
 	x = index
 	return
-}
-
-func (v *ArrayVolume) Get(x, y, z int) bool {
-	if x < 0 || y < 0 || z < 0 || x >= v.XLen() || y >= v.YLen() || z >= v.ZLen() {
-		return false
-	}
-	return v.a[Index(v, x, y, z)] != 0
-}
-
-func (v *ArrayVolume) Set(x, y, z int, val uint16) {
-	v.a[Index(v, x, y, z)] = val
-}
-
-func (v *ArrayVolume) GetV(x, y, z int) uint16 {
-	return v.a[Index(v, x, y, z)]
 }
 
 func Optimize(vol Uint16Volume, n int) {
