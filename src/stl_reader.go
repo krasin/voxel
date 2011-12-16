@@ -38,7 +38,6 @@ func ReadSTL(r io.Reader) (t []STLTriangle, err os.Error) {
 	n := uint32(data[0]) + uint32(data[1])<<8 + uint32(data[2])<<16 + uint32(data[3])<<24
 	data = data[4:]
 
-	fmt.Fprintf(os.Stderr, "%d triangles\n", n)
 	if len(data) < int(SizeOfSTLTriangle*n) {
 		return nil, fmt.Errorf("ReadSTL: unexpected end of file: want %d bytes to read triangle data, but only %d bytes is available", SizeOfSTLTriangle*n, len(data))
 	}
