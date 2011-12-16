@@ -104,10 +104,6 @@ func DotOnLine(p Point, line Line, r int64) bool {
 	return r2.Cmp(l3) >= 0
 }
 
-func IntersectLines(l1, l2 Line, scale int64) (p Point, ok bool) {
-	panic("IntersectLines is not implemented")
-}
-
 func to(a, n int64) int64 {
 	if a >= 0 {
 		return (a + (n-1)/2) / n
@@ -130,7 +126,6 @@ func findJ(p1, p2 Point, scale int64) (j uint) {
 			diff := int64(p1[z] - p2[z])
 			r2 += diff * diff
 		}
-		//		fmt.Fprintf(os.Stderr, "r2: %d, j: %d, scale: %d\n", r2, j, scale)
 		if r2 < (int64(scale)*int64(scale))<<(2*j) {
 			return j + 2
 		}
@@ -154,9 +149,6 @@ func (ps pointSlice) Len() int {
 }
 
 func (ps pointSlice) Less(i, j int) (res bool) {
-	//	defer func() {
-	//		fmt.Fprintf(os.Stderr, "Less(%d,%d): %v, %v\n", i, j, res, ps)
-	//	}()
 	for z := 0; z < 3; z++ {
 		if ps[i][z] < ps[j][z] {
 			return true
@@ -169,9 +161,7 @@ func (ps pointSlice) Less(i, j int) (res bool) {
 }
 
 func (ps pointSlice) Swap(i, j int) {
-	//	fmt.Fprintf(os.Stderr, "Swap(%d, %d), before: %v\n", i, j, ps)
 	ps[i], ps[j] = ps[j], ps[i]
-	//	fmt.Fprintf(os.Stderr, "Swap(%d, %d),  after: %v\n", i, j, ps)
 }
 
 func uniq(ps []Point) (res []Point) {
@@ -207,62 +197,29 @@ func AddDot(a, b, c Point, scale int64, vol VolumeSetter, i0, i1 int64, j0, j1 u
 			int64(i2)*c[z]
 		p[z] >>= m
 	}
-	//			fmt.Fprintf(os.Stderr, "AllTriangleDots1, 60, p=%v\n", p)
+
 	p = toGrid(p, scale)
-	/*	var last2 Point
-		if i1 != 0 {
-			if i1 < 0 {
-				fmt.Fprintf(os.Stderr, "ogogo! i1 < 0, i1: %d\n", i1)
-				panic("aaaa!")
-			}
-			if scoreDiff(last1, p) > 1 {
-				//			fmt.Fprintf(os.Stderr, "So, there is a problem; i1: %d, j1: %d\n", i1, j1)
-				var delta uint
-				for j1+delta <= MaxJ {
-					delta++
-					last2 = AddDot(a, b, c, scale, vol, i0, i1*(1<<delta)-1, j0, j1+delta, last1)
-					//				fmt.Fprintf(os.Stderr, "last1: %v, p: %v, last2: %v\n", last1, p, last2)
-					if !peq(p, last2) {
-						break
-					}
-				}
-				//			if j1 > MaxJ {
-				//				fmt.Fprintf(os.Stderr, "%d = j1 > MaxJ = %d\n", j1, MaxJ)
-				//			}
-			}
-			//		if peq(p, last2) {
-			//			fmt.Fprintf(os.Stderr, "opa! last2 == p\n")
-			//		}
-		}*/
 	vol.Set(int(p[0]), int(p[1]), int(p[2]), color)
-	//	if scoreDiff(last1, p) > 1 && scoreDiff(last2, p) > 1 {
-	//		fmt.Fprintf(os.Stderr, "Returning bad result. last1: %v, p: %v, last2: %v, i1: %d, j1: %d\n", last1, p, last2, i1, j1)
-	//	}
+
 	return p
 }
 
 func AllTriangleDots(a, b, c Point, scale int64, vol VolumeSetter, color uint16) {
-	//	fmt.Fprintf(os.Stderr, "AllTriangleDots1, 0, a=%v, b=%v, c=%v\n", a, b, c)
 	j0 := findJ(a, c, scale)
-	//	fmt.Fprintf(os.Stderr, "AllTriangleDots1, 10, j0=%d\n", j0)
 	j1 := findJ(a, b, scale)
-	//	fmt.Fprintf(os.Stderr, "AllTriangleDots1, 20, j1=%d\n", j1)
+
 	m := j0
 	if m < j1 {
 		m = j1
 	}
-	//	fmt.Fprintf(os.Stderr, "AllTriangleDots1, 30, m=%d\n", m)
+
 	for i0 := 0; i0 <= 1<<j0; i0++ {
 		var last1 Point
 		for i1 := 0; i0*(1<<(m-j0))+i1*(1<<(m-j1)) <= 1<<m; i1++ {
 			last1 = AddDot(a, b, c, scale, vol, int64(i0), int64(i1), j0, j1, last1, color)
 
 		}
-		//		fmt.Fprintf(os.Stderr, "AllTriangleDots1, 90\n")
 	}
-	//	fmt.Fprintf(os.Stderr, "AllTriangleDots1, 94, res: %v\n", res)
-	//	fmt.Fprintf(os.Stderr, "AllTriangleDots1, 95, res: %v\n", res)
-	//	fmt.Fprintf(os.Stderr, "AllTriangleDots1, 100, res: %v\n", res)
 }
 
 func checkAlphaInd(num, den int64, a, b, p, q *Point, ind int) bool {
