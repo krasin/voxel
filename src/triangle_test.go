@@ -305,7 +305,7 @@ func TestAllTriangleDots(t *testing.T) {
 	for ind, test := range allTriangleDotsTests {
 		sort.Sort(pointSlice(test.p))
 		vol := new(testVolumeSetter)
-		AllTriangleDots1(test.t[0], test.t[1], test.t[2], test.scale, vol, 1)
+		AllTriangleDots(test.t[0], test.t[1], test.t[2], test.scale, vol, 1)
 		if len(vol.p) != len(test.p) {
 			t.Errorf("Test #%d: number of triangle dots is unexpected. Want: %v, got: %v", ind, test.p, vol.p)
 			continue

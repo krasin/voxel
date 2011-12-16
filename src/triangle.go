@@ -241,7 +241,7 @@ func AddDot(a, b, c Point, scale int64, vol VolumeSetter, i0, i1 int64, j0, j1 u
 	return p
 }
 
-func AllTriangleDots1(a, b, c Point, scale int64, vol VolumeSetter, color uint16) {
+func AllTriangleDots(a, b, c Point, scale int64, vol VolumeSetter, color uint16) {
 	//	fmt.Fprintf(os.Stderr, "AllTriangleDots1, 0, a=%v, b=%v, c=%v\n", a, b, c)
 	j0 := findJ(a, c, scale)
 	//	fmt.Fprintf(os.Stderr, "AllTriangleDots1, 10, j0=%d\n", j0)
