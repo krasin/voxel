@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
-	"io"
 	"image"
+	"image/color"
 	"image/png"
+	"io"
 	"log"
 	"math"
 	"os"
@@ -17,10 +18,10 @@ const (
 )
 
 var (
-	Black  = image.RGBAColor{0, 0, 0, 255}
-	Yellow = image.RGBAColor{255, 255, 0, 255}
-	Green  = image.RGBAColor{0, 255, 0, 255}
-	colors = []image.RGBAColor{
+	Black  = color.RGBA{0, 0, 0, 255}
+	Yellow = color.RGBA{255, 255, 0, 255}
+	Green  = color.RGBA{0, 255, 0, 255}
+	colors = []color.RGBA{
 		{0, 0, 0, 255},
 		{255, 255, 0, 255},
 		{0, 255, 0, 255},
@@ -210,7 +211,7 @@ func Optimize(vol Uint16Volume, n int) {
 	return
 }
 
-func WriteNptl(vol BoolVoxelVolume, grid Grid, output io.Writer) (err os.Error) {
+func WriteNptl(vol BoolVoxelVolume, grid Grid, output io.Writer) (err error) {
 	v := 0
 	stepX := (grid.P1[0] - grid.P0[0]) / float64(vol.XLen())
 	stepY := (grid.P1[1] - grid.P0[1]) / float64(vol.YLen())
@@ -301,7 +302,7 @@ func Rasterize(m Mesh, n int) Uint16Volume {
 	fmt.Fprintf(os.Stderr, "Triangle rasterization complete\n")
 
 	var cnt int
-	bmp := image.NewRGBA(n, n)
+	bmp := image.NewRGBA(image.Rect(0, 0, n, n))
 	var q, q2 []Location16
 	for z := 1; z < n; z++ {
 		cnt = 0

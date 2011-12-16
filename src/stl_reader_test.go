@@ -36,7 +36,7 @@ func STLCoordEqual(a, b float32) bool {
 	if math.IsNaN(float64(a)) || math.IsNaN(float64(b)) {
 		return false
 	}
-	return math.Fabs(float64(a)-float64(b)) < eps
+	return math.Abs(float64(a)-float64(b)) < eps
 }
 
 func STLPointEqual(p1, p2 [3]float32) bool {

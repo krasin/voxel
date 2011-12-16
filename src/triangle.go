@@ -1,7 +1,7 @@
 package main
 
 import (
-	"big"
+	"math/big"
 )
 
 type Point [3]int64

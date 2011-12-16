@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"os"
 	"strconv"
 	"strings"
 	"unsafe"
@@ -28,7 +27,7 @@ func readSTLPoint(a []byte, p *STLPoint) []byte {
 	return a
 }
 
-func readLineWithPrefix(r *bufio.Reader, prefixes ...string) (prefix, str string, err os.Error) {
+func readLineWithPrefix(r *bufio.Reader, prefixes ...string) (prefix, str string, err error) {
 	var line []byte
 	if line, _, err = r.ReadLine(); err != nil {
 		return
@@ -42,7 +41,7 @@ func readLineWithPrefix(r *bufio.Reader, prefixes ...string) (prefix, str string
 	return "", "", fmt.Errorf("Line expected to start with one of the prefixes: %v, the actual line is: '%s'", prefixes, str)
 }
 
-func consumeLine(r *bufio.Reader, want string) (err os.Error) {
+func consumeLine(r *bufio.Reader, want string) (err error) {
 	var str string
 	if _, str, err = readLineWithPrefix(r, want); err != nil {
 		return
@@ -53,7 +52,7 @@ func consumeLine(r *bufio.Reader, want string) (err os.Error) {
 	return nil
 }
 
-func readAsciiSTL(data []byte) (res []STLTriangle, err os.Error) {
+func readAsciiSTL(data []byte) (res []STLTriangle, err error) {
 	r := bufio.NewReader(bytes.NewBuffer(data))
 	if err = consumeLine(r, "solid object"); err != nil {
 		return
@@ -62,7 +61,7 @@ func readAsciiSTL(data []byte) (res []STLTriangle, err os.Error) {
 		var prefix, str string
 		var t STLTriangle
 		if prefix, str, err = readLineWithPrefix(r, "facet normal ", "endsolid object"); err != nil {
-			if err == os.EOF {
+			if err == io.EOF {
 				return res, nil
 			}
 			return nil, err
@@ -75,9 +74,11 @@ func readAsciiSTL(data []byte) (res []STLTriangle, err os.Error) {
 			return nil, fmt.Errorf("Normal definition is broken: '%s'", str)
 		}
 		for i := 0; i < 3; i++ {
-			if t.n[i], err = strconv.Atof32(fields[i]); err != nil {
+			var v float64
+			if v, err = strconv.ParseFloat(fields[i], 32); err != nil {
 				return nil, err
 			}
+			t.n[i] = float32(v)
 		}
 		if err = consumeLine(r, "outer loop"); err != nil {
 			return nil, err
@@ -91,9 +92,11 @@ func readAsciiSTL(data []byte) (res []STLTriangle, err os.Error) {
 				return nil, fmt.Errorf("Vertex definition is broken: '%s'", str)
 			}
 			for j := 0; j < 3; j++ {
-				if t.v[i][j], err = strconv.Atof32(fields[j]); err != nil {
+				var v float64
+				if v, err = strconv.ParseFloat(fields[j], 32); err != nil {
 					return nil, err
 				}
+				t.v[i][j] = float32(v)
 			}
 		}
 		if err = consumeLine(r, "endloop"); err != nil {
@@ -109,7 +112,7 @@ func readAsciiSTL(data []byte) (res []STLTriangle, err os.Error) {
 	return
 }
 
-func ReadSTL(r io.Reader) (t []STLTriangle, err os.Error) {
+func ReadSTL(r io.Reader) (t []STLTriangle, err error) {
 	var data []byte
 	if data, err = ioutil.ReadAll(r); err != nil {
 		return
