@@ -7,6 +7,7 @@ GOFILES=\
 	octree.go\
 	optimize.go\
 	stl_reader.go\
+	timing.go\
 	triangle.go\
 
 include $(GOROOT)/src/Make.cmd
