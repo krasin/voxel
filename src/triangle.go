@@ -472,32 +472,6 @@ var edges = [][6]int64{
 	{1, 0, 1, 1, 0, 0},
 }
 
-func ClipTriangle(triangle Triangle, cube Cube, scale int64) (res []Point, ok bool) {
-	for i := 0; i < 3; i++ {
-		line := Line{triangle[i], triangle[(i+1)%3]}
-		if p, ok := ClipLine(line, cube, scale); ok {
-			res = append(res, p[0], p[1])
-		}
-	}
-	// It's also possible that triangle crosses one of cube's edges.
-	// In this case, the crossing point becomes one of the vertices of the
-	// clipped polygon.
-	for _, e := range edges {
-		var edge Line
-		for i := 0; i < 3; i++ {
-			edge[0][i] = (1-e[i])*cube[0][i] + e[i]*cube[1][i]
-			edge[1][i] = (1-e[i+3])*cube[0][i] + e[i+3]*cube[1][i]
-		}
-		// TODO: we need to add cross points to the proper place 
-		res = append(res, CrossLineWithTriangle(edge, triangle, scale)...)
-	}
-	res = uniq(res)
-	if len(res) > 1 && peq(res[0], res[len(res)-1]) {
-		res = res[:len(res)-1]
-	}
-	return res, len(res) > 2
-}
-
 func det3(v0, v1, v2 Vector) int64 {
 	return v0[0]*v1[1]*v2[2] + v0[1]*v1[2]*v2[0] + v0[2]*v1[0]*v2[1] -
 		v0[0]*v1[2]*v2[1] - v0[1]*v1[0]*v2[2] - v0[2]*v1[1]*v2[0]
