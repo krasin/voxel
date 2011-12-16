@@ -2,9 +2,6 @@ package main
 
 import (
 	"big"
-	"sort"
-	"fmt"
-	"os"
 )
 
 type Point [3]int64
@@ -111,65 +108,6 @@ func IntersectLines(l1, l2 Line, scale int64) (p Point, ok bool) {
 	panic("IntersectLines is not implemented")
 }
 
-func CrossLineWithTriangle(line Line, triangle Triangle, scale int64) (res []Point) {
-	fmt.Fprintf(os.Stderr, "CrossLineWithTriangle, line: %v, triangle: %v\n", line, triangle)
-	if DotInPlane(line[0], triangle[0], triangle[1], triangle[2], 1) &&
-		DotInPlane(line[1], triangle[0], triangle[1], triangle[2], 1) {
-		if DotInTriangle(line[0], triangle[0], triangle[1], triangle[2], 1) {
-			res = append(res, line[0])
-		}
-		if DotInTriangle(line[1], triangle[0], triangle[1], triangle[2], 1) {
-			res = append(res, line[1])
-		}
-		if len(res) == 2 {
-			return
-		}
-		before := len(res)
-		for i := 0; i < 3; i++ {
-			if DotOnLine(triangle[i], line, 1) {
-				res = append(res, triangle[i])
-			}
-		}
-		sort.Sort(pointSlice(res))
-		res = uniq(res)
-		if before < len(res) {
-			return
-		}
-		for i := 0; i < 3; i++ {
-			if p, ok := IntersectLines(line, Line{triangle[i], triangle[(i+1)%3]}, scale); ok {
-				res = append(res, p)
-			}
-		}
-		sort.Sort(pointSlice(res))
-		res = uniq(res)
-		return
-	}
-	return
-}
-
-func hash(p Point) uint64 {
-	return (uint64(p[0]) << 42) + (uint64(p[1] << 21)) + uint64(p[2])
-}
-
-func adjacent(p Point) (res []Point) {
-	res = make([]Point, 8)[0:0]
-	for dx := -1; dx <= 1; dx++ {
-		for dy := -1; dy <= 1; dy++ {
-			for dz := -1; dz <= 1; dz++ {
-				if dx == 0 && dy == 0 && dz == 0 {
-					continue
-				}
-				res = append(res, Point{
-					p[0] + int64(dx),
-					p[1] + int64(dy),
-					p[2] + int64(dz),
-				})
-			}
-		}
-	}
-	return
-}
-
 func to(a, n int64) int64 {
 	if a >= 0 {
 		return (a + (n-1)/2) / n
@@ -183,41 +121,6 @@ func toGrid(p Point, scale int64) Point {
 
 func scalePoint(p Point, scale int64) Point {
 	return Point{p[0] * scale, p[1] * scale, p[2] * scale}
-}
-
-func AllTriangleDots(a, b, c Point, scale, r int64) (res []Point) {
-	ga := toGrid(a, scale)
-	gb := toGrid(b, scale)
-	gc := toGrid(c, scale)
-
-	r = r * scale
-	q := []Point{ga, gb, gc}
-	var q2 []Point
-	m := make(map[uint64]Point)
-	m[hash(ga)] = ga
-	m[hash(gb)] = gb
-	m[hash(gc)] = gc
-	for len(q) > 0 {
-		q, q2 = q2[0:0], q
-		for _, p := range q2 {
-			for _, p2 := range adjacent(p) {
-				if _, ok := m[hash(p2)]; ok {
-					continue
-				}
-
-				if !DotInTriangle(scalePoint(p2, scale), a, b, c, r) {
-					continue
-				}
-				m[hash(p2)] = p2
-				q = append(q, p2)
-			}
-		}
-	}
-	res = make([]Point, len(m))[0:0]
-	for _, p := range m {
-		res = append(res, p)
-	}
-	return
 }
 
 func findJ(p1, p2 Point, scale int64) (j uint) {
