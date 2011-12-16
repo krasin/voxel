@@ -196,10 +196,6 @@ func Optimize(vol Uint16Volume, n int) {
 				if v1 > v+1 && int(v)+1 <= n {
 					vol.Set(x1, y1, z1, v+1)
 					q = append(q, Index(vol, x1, y1, z1))
-					//					v2 := vol.GetV(x1, y1, z1)
-					//					if v2 != v+1 {
-					//						panic(fmt.Sprintf("x1: %d, y1: %d, z1: %d, v: %d, v1: %d, v2: %d", x1, y1, z1, v, v1, v2))
-					//					}
 				}
 			}
 		}
@@ -207,9 +203,6 @@ func Optimize(vol Uint16Volume, n int) {
 	for y := 0; y < vol.YLen(); y++ {
 		for z := 0; z < vol.ZLen(); z++ {
 			for x := 0; x < vol.XLen(); x++ {
-				//				if vol.GetV(x, y, z) == math.MaxUint16 {
-				//					panic("unreachable")
-				//				}
 				if vol.GetV(x, y, z) > uint16(n) {
 					vol.Set(x, y, z, 0)
 				}
@@ -348,7 +341,6 @@ type Location16 [2]int16
 
 func Rasterize(m Mesh, n int) Uint16Volume {
 	scale := m.N[0] / int64(n)
-	//	vol := NewArrayVolume(n, n, n)
 	vol := NewOctree(n)
 	// Rasterize edges
 	for index, t := range m.Triangle {
