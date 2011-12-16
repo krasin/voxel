@@ -92,18 +92,6 @@ func DotInTriangle(p, a, b, c Point, r int64) bool {
 	return DotInPlane(p, a, b, c, r) && inplaneDotInTriangle(p, a, b, c, r)
 }
 
-func DotOnLine(p Point, line Line, r int64) bool {
-	v1 := NewVector(line[0], line[1])
-	v2 := NewVector(line[0], p)
-	v3 := VectorProduct(v1, v2)
-	l3 := len2(v3)
-	l3.Mul(l3, big.NewInt(4))
-	r2 := big.NewInt(r)
-	r2.Mul(r2, r2)
-	r2.Mul(r2, len2(v1))
-	return r2.Cmp(l3) >= 0
-}
-
 func to(a, n int64) int64 {
 	if a >= 0 {
 		return (a + (n-1)/2) / n
