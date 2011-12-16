@@ -164,26 +164,6 @@ func (ps pointSlice) Swap(i, j int) {
 	ps[i], ps[j] = ps[j], ps[i]
 }
 
-func uniq(ps []Point) (res []Point) {
-	res = ps[:0]
-	for i, p := range ps {
-		if i > 0 && peq(ps[i-1], p) {
-			continue
-		}
-		res = append(res, ps[i])
-	}
-	return
-}
-
-func scoreDiff(p1, p2 Point) (res int) {
-	for i := 0; i < 3; i++ {
-		if p1[i] != p2[i] {
-			res++
-		}
-	}
-	return
-}
-
 func AddDot(a, b, c Point, scale int64, vol VolumeSetter, i0, i1 int64, j0, j1 uint, last1 Point, color uint16) Point {
 	m := j0
 	if m < j1 {
@@ -220,46 +200,6 @@ func AllTriangleDots(a, b, c Point, scale int64, vol VolumeSetter, color uint16)
 
 		}
 	}
-}
-
-func checkAlphaInd(num, den int64, a, b, p, q *Point, ind int) bool {
-	if den == 0 {
-		return false
-	}
-	if den < 0 {
-		num = -num
-		den = -den
-	}
-	if num < 0 || num > den {
-		// 0 <= \alpha <= 1
-		return false
-	}
-	left := a[ind]*den + num*(b[ind]-a[ind])
-	if left < p[ind]*den {
-		return false
-	}
-	if left > q[ind]*den {
-		return false
-	}
-	return true
-}
-
-func checkAlpha(num, den int64, a, b, p, q *Point) bool {
-	for i := 0; i < 3; i++ {
-		if !checkAlphaInd(num, den, a, b, p, q, i) {
-			return false
-		}
-	}
-	return true
-}
-
-func getAlphaPoint(num, den int64, a, b *Point) (res Point) {
-	for i := 0; i < 3; i++ {
-		// This is not the best thing to do, because we divide on the calculated value.
-		// This can lead to an unpredictable behavior, but we say "fine" for now.
-		res[i] = a[i] + (num*(b[i]-a[i]))/den
-	}
-	return
 }
 
 func det3(v0, v1, v2 Vector) int64 {
