@@ -1,10 +1,14 @@
 package main
 
 import (
+	"bufio"
+	"bytes"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
+	"strconv"
+	"strings"
 	"unsafe"
 )
 
@@ -24,14 +28,98 @@ func readSTLPoint(a []byte, p *STLPoint) []byte {
 	return a
 }
 
+func readLineWithPrefix(r *bufio.Reader, prefixes ...string) (prefix, str string, err os.Error) {
+	var line []byte
+	if line, _, err = r.ReadLine(); err != nil {
+		return
+	}
+	str = strings.TrimSpace(string(line))
+	for _, pp := range prefixes {
+		if strings.HasPrefix(str, pp) {
+			return pp, str[len(pp):], nil
+		}
+	}
+	return "", "", fmt.Errorf("Line expected to start with one of the prefixes: %v, the actual line is: '%s'", prefixes, str)
+}
+
+func consumeLine(r *bufio.Reader, want string) (err os.Error) {
+	var str string
+	if _, str, err = readLineWithPrefix(r, want); err != nil {
+		return
+	}
+	if str != "" {
+		return fmt.Errorf("Line contains unexpected symbols after the right prefix: '%s', symbols: '%s'", want, str)
+	}
+	return nil
+}
+
+func readAsciiSTL(data []byte) (res []STLTriangle, err os.Error) {
+	r := bufio.NewReader(bytes.NewBuffer(data))
+	if err = consumeLine(r, "solid object"); err != nil {
+		return
+	}
+	for {
+		var prefix, str string
+		var t STLTriangle
+		if prefix, str, err = readLineWithPrefix(r, "facet normal ", "endsolid object"); err != nil {
+			if err == os.EOF {
+				return res, nil
+			}
+			return nil, err
+		}
+		if prefix == "endsolid object" {
+			return
+		}
+		fields := strings.Fields(str)
+		if len(fields) != 3 {
+			return nil, fmt.Errorf("Normal definition is broken: '%s'", str)
+		}
+		for i := 0; i < 3; i++ {
+			if t.n[i], err = strconv.Atof32(fields[i]); err != nil {
+				return nil, err
+			}
+		}
+		if err = consumeLine(r, "outer loop"); err != nil {
+			return nil, err
+		}
+		for i := 0; i < 3; i++ {
+			if _, str, err = readLineWithPrefix(r, "vertex "); err != nil {
+				return nil, err
+			}
+			fields = strings.Fields(str)
+			if len(fields) != 3 {
+				return nil, fmt.Errorf("Vertex definition is broken: '%s'", str)
+			}
+			for j := 0; j < 3; j++ {
+				if t.v[i][j], err = strconv.Atof32(fields[j]); err != nil {
+					return nil, err
+				}
+			}
+		}
+		if err = consumeLine(r, "endloop"); err != nil {
+			return nil, err
+		}
+		if err = consumeLine(r, "endfacet"); err != nil {
+			return nil, err
+		}
+
+		res = append(res, t)
+
+	}
+	return
+}
+
 func ReadSTL(r io.Reader) (t []STLTriangle, err os.Error) {
 	var data []byte
 	if data, err = ioutil.ReadAll(r); err != nil {
 		return
 	}
+	if len(data) < 5 {
+		return nil, fmt.Errorf("The file is too short: %d bytes", len(data))
+	}
 	magic := data[:5]
 	if string(magic) == "solid" {
-		panic("ReadSTL: ascii format is not implemented")
+		return readAsciiSTL(data)
 	}
 	// Skip STL header
 	data = data[80:]
