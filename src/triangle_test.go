@@ -1,6 +1,7 @@
 package main
 
 import (
+	"sort"
 	"testing"
 )
 
@@ -271,25 +272,50 @@ var allTriangleDotsTests = []allTriangleDotsTest{
 	},
 }
 
-// TODO(krasin): update AllTriangleDots1 call to match the new signature.
-func disabledTestAllTriangleDots(t *testing.T) {
-	/*	m := make(map[uint64]Point)
-		for ind, test := range allTriangleDotsTests {
-			sort.Sort(pointSlice(test.p))
-			for _, p := range test.p {
-				m[hash(p)] = p
-			}		
-			pt := AllTriangleDots1(test.t[0], test.t[1], test.t[2], test.scale, 1)
-			if len(pt) != len(test.p) {
-				t.Errorf("Test #%d: number of triangle dots is unexpected. Want: %v, got: %v", ind, test.p, pt)
+type testVolumeSetter struct {
+	p   []Point
+	val []uint16
+}
+
+func (s *testVolumeSetter) Set(x, y, z int, val uint16) {
+	ind := s.find(x, y, z)
+	if ind != -1 {
+		s.val[ind] = val
+		return
+	}
+	s.p = append(s.p, Point{int64(x), int64(y), int64(z)})
+	s.val = append(s.val, val)
+}
+
+func (s *testVolumeSetter) find(x, y, z int) int {
+	for ind, p := range s.p {
+		if p[0] == int64(x) && p[1] == int64(y) && p[2] == int64(z) {
+			return ind
+		}
+	}
+	return -1
+}
+
+func (s *testVolumeSetter) Get(x, y, z int) bool {
+	ind := s.find(x, y, z)
+	return ind != -1 && s.val[ind] != 0
+}
+
+func TestAllTriangleDots(t *testing.T) {
+	for ind, test := range allTriangleDotsTests {
+		sort.Sort(pointSlice(test.p))
+		vol := new(testVolumeSetter)
+		AllTriangleDots1(test.t[0], test.t[1], test.t[2], test.scale, vol, 1)
+		if len(vol.p) != len(test.p) {
+			t.Errorf("Test #%d: number of triangle dots is unexpected. Want: %v, got: %v", ind, test.p, vol.p)
+			continue
+		}
+		for _, p := range test.p {
+			if !vol.Get(int(p[0]), int(p[1]), int(p[2])) {
+				t.Errorf("Test #%d: point expected, but not returned: %v. Want: %v, got: %v", ind, p, test.p, vol.p)
 				continue
 			}
-			for _, p := range pt {
-				if _, ok := m[hash(p)]; !ok {
-					t.Errorf("Test #%d: unexpected point: %v. Want: %v, got: %v", ind, p, test.p, pt)
-					continue
-				}
-			}
+		}
 
-		}*/
+	}
 }
