@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"time"
 )
 
@@ -27,4 +28,8 @@ func GetTimings() (res map[string]time.Duration) {
 		res[name] = stops[name].Sub(start)
 	}
 	return
+}
+
+func PrintTimings(w io.Writer) {
+	fmt.Fprintf(w, "%v\n", GetTimings())
 }
