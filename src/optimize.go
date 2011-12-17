@@ -357,23 +357,40 @@ func Rasterize(m Mesh, n int) Uint16Volume {
 }
 
 func main() {
+	StartTiming("total")
+	StartTiming("Read STL from Stdin")
 	triangles, err := ReadSTL(os.Stdin)
 	if err != nil {
 		log.Fatalf("ReadSTL: %v", err)
 	}
-	mesh := STLToMesh(VoxelSide*MeshMultiplier, triangles)
+	StopTiming("Read STL from Stdin")
 
+	StartTiming("STLToMesh")
+	mesh := STLToMesh(VoxelSide*MeshMultiplier, triangles)
+	StopTiming("STLToMesh")
+
+	StartTiming("MeshVolume")
 	volume := MeshVolume(mesh.Triangle, 1)
 	if volume < 0 {
 		volume = -volume
 	}
 	fmt.Fprintf(os.Stderr, "Mesh volume (in mesh units): %d\n", volume)
 	fmt.Fprintf(os.Stderr, "Mesh volume (original units): %f\n", float64(volume)/float64(mesh.N[0]*mesh.N[1]*mesh.N[2])*(mesh.P1[0]-mesh.P0[0])*(mesh.P1[1]-mesh.P0[1])*(mesh.P1[2]-mesh.P0[2]))
+	StopTiming("MeshVolume")
 
+	StartTiming("Rasterize")
 	vol := Rasterize(mesh, VoxelSide)
+	StopTiming("Rasterize")
 
+	StartTiming("Optimize")
 	Optimize(vol, 22)
+	StopTiming("Optimize")
+
+	StartTiming("WriteNptl")
 	if err = WriteNptl(vol, mesh.Grid, os.Stdout); err != nil {
 		log.Fatalf("WriteNptl: %v", err)
 	}
+	StopTiming("WriteNptl")
+	StopTiming("total")
+	PrintTimings(os.Stderr)
 }
