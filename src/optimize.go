@@ -237,7 +237,7 @@ func WriteNptl(vol BoolVoxelVolume, grid Grid, output io.Writer) (err error) {
 			}
 		}
 	}
-	fmt.Fprintf(os.Stderr, "Volume is filled by %v%\n", float64(v)*float64(100)/(float64(vol.XLen())*float64(vol.YLen())*float64(vol.ZLen())))
+	fmt.Fprintf(os.Stderr, "Volume is filled by %v%%\n", float64(v)*float64(100)/(float64(vol.XLen())*float64(vol.YLen())*float64(vol.ZLen())))
 	return
 }
 
