@@ -47,7 +47,8 @@ func GetTimings() (res []Timing) {
 }
 
 func PrintTimings(w io.Writer) {
+	fmt.Fprintf(w, "Timings:\n")
 	for _, t := range GetTimings() {
-		fmt.Fprintf(w, "%s: %g ms\n", t.Name, t.Duration().Seconds())
+		fmt.Fprintf(w, "\t%s:\t%d ms\n", t.Name, t.Duration().Nanoseconds()/1000000)
 	}
 }
