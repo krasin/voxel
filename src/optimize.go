@@ -147,6 +147,8 @@ type Uint16Volume interface {
 	BoolVoxelVolume
 	Set(x, y, z int, v uint16)
 	GetV(x, y, z int) uint16
+	SetAllFilled(v uint16)
+	MapBoundary(f func(x, y, z int))
 }
 
 func Index(vol Uint16Volume, x, y, z int) int {
@@ -164,6 +166,14 @@ func Coord(vol Uint16Volume, index int) (x, y, z int) {
 
 func Optimize(vol Uint16Volume, n int) {
 	var q, q2 []int
+	vol.SetAllFilled(math.MaxUint16 - 3)
+	/*	vol.MapBoundary(func(x, y, z int) {
+		if z > 8 {
+			vol.Set(x, y, z, 1)
+			q = append(q, Index(vol, x, y, z))
+			return
+		}
+	})*/
 	for y := 0; y < vol.YLen(); y++ {
 		for z := 0; z < vol.ZLen(); z++ {
 			for x := 0; x < vol.XLen(); x++ {
@@ -172,9 +182,9 @@ func Optimize(vol Uint16Volume, n int) {
 					q = append(q, Index(vol, x, y, z))
 					continue
 				}
-				if vol.Get(x, y, z) {
-					vol.Set(x, y, z, math.MaxUint16-3)
-				}
+				//				if vol.Get(x, y, z) {
+				//					vol.Set(x, y, z, math.MaxUint16-3)
+				//				}
 			}
 		}
 	}

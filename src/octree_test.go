@@ -5,8 +5,9 @@ import (
 )
 
 const (
-	oSet = 1
-	oGet = 2
+	oSet          = 1
+	oGet          = 2
+	oSetAllFilled = 3
 )
 
 type octreeTest struct {
@@ -32,6 +33,15 @@ var octreeTests = []octreeTest{
 			{oSet, [3]int{511, 0, 0}, 5},
 			{oSet, [3]int{511, 511, 511}, 6},
 			{oSet, [3]int{511, 511, 1}, 7},
+			// Set value to all filled cells.
+			{oSetAllFilled, [3]int{}, 10},
+			{oGet, [3]int{0, 0, 0}, 10},
+			{oGet, [3]int{0, 0, 1}, 10},
+			{oGet, [3]int{0, 1, 1}, 10},
+			{oGet, [3]int{1, 1, 1}, 10},
+			{oGet, [3]int{511, 0, 0}, 10},
+			{oGet, [3]int{511, 511, 511}, 10},
+			{oGet, [3]int{511, 511, 1}, 10},
 		},
 	},
 }
@@ -42,6 +52,8 @@ func TestOctree(t *testing.T) {
 		for actInd, act := range test.Action {
 			failed := false
 			switch act.Op {
+			case oSetAllFilled:
+				tree.SetAllFilled(act.V)
 			case oSet:
 				tree.Set(act.P[0], act.P[1], act.P[2], act.V)
 				fallthrough
@@ -51,6 +63,8 @@ func TestOctree(t *testing.T) {
 					t.Errorf("test #%d, action #%d: tree%v: want %d, got %d\n", testInd, actInd, act.P, act.V, v)
 					failed = true
 				}
+			default:
+				t.Fatalf("test #%d, action #%d: unknown Op: %d\n", testInd, actInd, act.P)
 			}
 			if failed {
 				break

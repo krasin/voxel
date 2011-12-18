@@ -157,3 +157,82 @@ func (t *Octree) internalSet(depth uint, p, base [3]int, l int, index int64, v u
 func (t *Octree) Set(x, y, z int, v uint16) {
 	t.internalSet(0, [3]int{x, y, z}, [3]int{0, 0, 0}, t.N, 0, v)
 }
+
+func (t *Octree) internalSetAllFilled(depth uint, base [3]int, l int, index int64, v uint16) {
+	if v >= math.MaxUint16-1 {
+		panic("v >= math.MaxUint16-1. These values are reserved")
+	}
+	if index+octShift[depth] > t.mask {
+		panic("extended part of octree is not implemented")
+	}
+	arindex := int((index + octShift[depth]) & t.mask)
+	l >>= 1
+	switch t.v[arindex] {
+	// This node is empty, nothing to do
+	case 0:
+
+	// We need to visit subnodes
+	case 1:
+		for i := 0; i < 8; i++ {
+			t.internalSetAllFilled(
+				depth+1,
+				[3]int{base[0] + l*(i&4), base[1] + l*(i&2), base[2] + l*(i&1)},
+				l,
+				(index<<3)+int64(i),
+				v)
+
+		}
+
+	// This node is empty (unfortunately, we have 2 states for empty nodes)
+	case 2:
+
+	// Child node
+	default:
+		t.v[arindex] = v + 2
+	}
+}
+
+func (t *Octree) SetAllFilled(v uint16) {
+	t.internalSetAllFilled(0, [3]int{0, 0, 0}, t.N, 0, v)
+}
+
+func (t *Octree) internalMapBoundary(depth uint, base [3]int, l int, index int64, f func(x, y, z int)) {
+	if index+octShift[depth] > t.mask {
+		panic("extended part of octree is not implemented")
+	}
+	arindex := int((index + octShift[depth]) & t.mask)
+	l >>= 1
+	switch t.v[arindex] {
+	// This node is empty, nothing to do
+	case 0:
+
+	// We need to visit subnodes
+	case 1:
+		for i := 0; i < 8; i++ {
+			t.internalMapBoundary(
+				depth+1,
+				[3]int{base[0] + l*(i&4), base[1] + l*(i&2), base[2] + l*(i&1)},
+				l,
+				(index<<3)+int64(i),
+				f)
+
+		}
+	// This node is empty (unfortunately, we have 2 states for empty nodes)
+	case 2:
+
+	// Child node
+	default:
+		if l == 0 {
+			if IsBoundary(t, base[0], base[1], base[2]) {
+				f(base[0], base[1], base[2])
+			}
+			return
+		}
+
+		panic(fmt.Sprintf("Visiting edges of the cube is not implemented, l=%d, t.v[arindex]: %d", l, t.v[arindex]))
+	}
+}
+
+func (t *Octree) MapBoundary(f func(x, y, z int)) {
+	t.internalMapBoundary(0, [3]int{0, 0, 0}, t.N, 0, f)
+}
