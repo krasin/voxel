@@ -167,14 +167,14 @@ func Coord(vol Uint16Volume, index int) (x, y, z int) {
 func Optimize(vol Uint16Volume, n int) {
 	var q, q2 []int
 	vol.SetAllFilled(math.MaxUint16 - 3)
-	/*	vol.MapBoundary(func(x, y, z int) {
+	vol.MapBoundary(func(x, y, z int) {
 		if z > 8 {
 			vol.Set(x, y, z, 1)
 			q = append(q, Index(vol, x, y, z))
 			return
 		}
-	})*/
-	for y := 0; y < vol.YLen(); y++ {
+	})
+	/*	for y := 0; y < vol.YLen(); y++ {
 		for z := 0; z < vol.ZLen(); z++ {
 			for x := 0; x < vol.XLen(); x++ {
 				if IsBoundary(vol, x, y, z) && z > 8 {
@@ -187,7 +187,7 @@ func Optimize(vol Uint16Volume, n int) {
 				//				}
 			}
 		}
-	}
+	}*/
 	for len(q) > 0 {
 		fmt.Fprintf(os.Stderr, "len(q): %d\n", len(q))
 		q, q2 = q2[:0], q

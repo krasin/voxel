@@ -176,7 +176,7 @@ func (t *Octree) internalSetAllFilled(depth uint, base [3]int, l int, index int6
 		for i := 0; i < 8; i++ {
 			t.internalSetAllFilled(
 				depth+1,
-				[3]int{base[0] + l*(i&4), base[1] + l*(i&2), base[2] + l*(i&1)},
+				[3]int{base[0] + l*((i&4)>>2), base[1] + l*((i&2)>>1), base[2] + l*(i&1)},
 				l,
 				(index<<3)+int64(i),
 				v)
@@ -211,7 +211,7 @@ func (t *Octree) internalMapBoundary(depth uint, base [3]int, l int, index int64
 		for i := 0; i < 8; i++ {
 			t.internalMapBoundary(
 				depth+1,
-				[3]int{base[0] + l*(i&4), base[1] + l*(i&2), base[2] + l*(i&1)},
+				[3]int{base[0] + l*((i&4)>>2), base[1] + l*((i&2)>>1), base[2] + l*(i&1)},
 				l,
 				(index<<3)+int64(i),
 				f)

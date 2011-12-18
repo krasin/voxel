@@ -8,6 +8,7 @@ const (
 	oSet          = 1
 	oGet          = 2
 	oSetAllFilled = 3
+	oMapBoundary  = 4
 )
 
 type octreeTest struct {
@@ -42,6 +43,7 @@ var octreeTests = []octreeTest{
 			{oGet, [3]int{511, 0, 0}, 10},
 			{oGet, [3]int{511, 511, 511}, 10},
 			{oGet, [3]int{511, 511, 1}, 10},
+			{oMapBoundary, [3]int{511, 511, 1}, 10},
 		},
 	},
 }
@@ -52,6 +54,16 @@ func TestOctree(t *testing.T) {
 		for actInd, act := range test.Action {
 			failed := false
 			switch act.Op {
+			case oMapBoundary:
+				was := false
+				tree.MapBoundary(func(x, y, z int) {
+					if x == act.P[0] && y == act.P[1] && z == act.P[2] {
+						was = true
+					}
+				})
+				if !was {
+					t.Errorf("test #%d, action #%d: MapBoundary has not found %v\n", testInd, actInd, act.P)
+				}
 			case oSetAllFilled:
 				tree.SetAllFilled(act.V)
 			case oSet:
