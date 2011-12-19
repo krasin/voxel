@@ -13,6 +13,9 @@ var spread3tests = []spread3test{
 	{0, 0},
 	{1, 1},
 	{3, 9},
+	{255, 0x249249},
+	{0xAA, 0x208208},
+	{0x0F, 0x249},
 }
 
 func TestSpread3(t *testing.T) {
