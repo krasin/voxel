@@ -32,13 +32,13 @@ func TestSpread3(t *testing.T) {
 	}
 }
 
-type point2htest struct {
+type point2hTest struct {
 	p               Point16
 	h               int
 	skipReverseTest bool
 }
 
-var point2htests = []point2htest{
+var point2hTests = []point2hTest{
 	{Point16{0, 0, 0}, 0, false},
 	{Point16{1, 1, 1}, 0x421, false},
 	{Point16{32, 32, 32}, 0, true},
@@ -47,7 +47,7 @@ var point2htests = []point2htest{
 }
 
 func TestPoint2h(t *testing.T) {
-	for testInd, test := range point2htests {
+	for testInd, test := range point2hTests {
 		gotH := point2h(test.p)
 		if gotH != test.h {
 			t.Errorf("test #%d: point2h(%v): want %d, got %d", testInd, test.p, test.h, gotH)
@@ -62,12 +62,12 @@ func TestPoint2h(t *testing.T) {
 	}
 }
 
-type point2ktest struct {
+type point2kTest struct {
 	p Point16
 	k int
 }
 
-var point2ktests = []point2ktest{
+var point2kTests = []point2kTest{
 	{Point16{0, 0, 0}, 0},
 	{Point16{32, 32, 32}, 7},
 	{Point16{0xFF << 5, 0xFF << 5, 0xFF << 5}, 0xFFFFFF},
@@ -76,7 +76,7 @@ var point2ktests = []point2ktest{
 }
 
 func TestPoint2k(t *testing.T) {
-	for testInd, test := range point2ktests {
+	for testInd, test := range point2kTests {
 		gotK := point2k(test.p)
 		if gotK != test.k {
 			t.Errorf("test #%d: point2k(%v): want %d (0x%x), got %d (0x%x)", testInd, test.p, test.k, test.k, gotK, gotK)
@@ -84,6 +84,28 @@ func TestPoint2k(t *testing.T) {
 		gotP := k2point(test.k)
 		if gotP != test.p {
 			t.Errorf("test #%d: k2point(%d): want %v, got %v", testInd, test.k, test.p, gotP)
+		}
+	}
+}
+
+type point2keyTest struct {
+	p   Point16
+	key uint64
+}
+
+var point2keyTests = []point2keyTest{
+	{Point16{0, 0, 0}, 0},
+	{Point16{1, 1, 1}, 0x421},
+	{Point16{32, 32, 32}, 0x38000},
+	{Point16{33, 33, 33}, 0x38421},
+	{Point16{511, 0, 1}, 0x4927C01},
+}
+
+func TestPoint2Key(t *testing.T) {
+	for testInd, test := range point2keyTests {
+		got := point2key(test.p)
+		if got != test.key {
+			t.Errorf("test #%d: point2key(%d): want %d (0x%x), got %d (0x%x)", testInd, test.key, test.key, got, got)
 		}
 	}
 }

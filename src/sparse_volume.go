@@ -15,7 +15,7 @@ type SparseVolume struct {
 	lk uint
 }
 
-func (v *SparseVolume) point2key(p Point16) uint64 {
+func point2key(p Point16) uint64 {
 	return uint64(point2k(p))<<(3*lh) + uint64(point2h(p))
 }
 
