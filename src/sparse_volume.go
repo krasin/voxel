@@ -16,15 +16,18 @@ type SparseVolume struct {
 }
 
 func (v *SparseVolume) point2key(p Point16) uint64 {
-	return uint64(v.point2k(p))<<(3*lh) + uint64(point2h(p))
+	return uint64(point2k(p))<<(3*lh) + uint64(point2h(p))
 }
 
-func (v *SparseVolume) point2k(p Point16) int {
-	return (spread3(byte(p[0]>>lh)) << 2) + (spread3(byte(p[1]>>lh)) << 1) + spread3(byte(p[2])>>lh)
+func point2k(p Point16) int {
+	return (spread3(byte(p[0]>>lh)) << 2) + (spread3(byte(p[1]>>lh)) << 1) + spread3(byte(p[2]>>lh))
 }
 
-func (v *SparseVolume) k2point(k int) (p Point16) {
-	panic("k2point not implemented")
+func k2point(k int) (p Point16) {
+	p[0] = uint16(join3((k>>2)&0x249249)) << lh
+	p[1] = uint16(join3((k>>1)&0x249249)) << lh
+	p[2] = uint16(join3(k&0x249249)) << lh
+	return
 }
 
 func point2h(p Point16) int {
@@ -46,17 +49,24 @@ func spread3(b byte) (x int) {
 	return
 }
 
+func join3(x int) (b byte) {
+	x = ((x & 0x208208) >> 2) | (x & 0xDF7DF7)
+	x = ((x & 0xC00C0) >> 4) | (x & 0x3FF3F)
+	x = ((x & 0xF000) >> 8) | (x & 0x0FFF)
+	return byte(x)
+}
+
 func key2h(key uint64) int {
 	return int(key & mask3lh)
 }
 
-func (v *SparseVolume) key2k(key uint64) int {
+func key2k(key uint64) int {
 	return int(key >> 3 * lh)
 }
 
-func (v *SparseVolume) key2point(key uint64) (p Point16) {
+func key2point(key uint64) (p Point16) {
 	ph := h2point(key2h(key))
-	pk := v.k2point(v.key2k(key))
+	pk := k2point(key2k(key))
 	p[0] = (pk[0] << lh) | ph[0]
 	p[1] = (pk[1] << lh) | ph[1]
 	p[2] = (pk[2] << lh) | ph[2]
