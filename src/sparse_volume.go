@@ -7,7 +7,7 @@ const (
 	lh = 5
 
 	masklh  = (1 << lh) - 1
-	mask3lh = (1 << 3 * lh) - 1
+	mask3lh = (1 << (3 * lh)) - 1
 )
 
 type SparseVolume struct {
@@ -61,14 +61,14 @@ func key2h(key uint64) int {
 }
 
 func key2k(key uint64) int {
-	return int(key >> 3 * lh)
+	return int(key >> (3 * lh))
 }
 
 func key2point(key uint64) (p Point16) {
 	ph := h2point(key2h(key))
 	pk := k2point(key2k(key))
-	p[0] = (pk[0] << lh) | ph[0]
-	p[1] = (pk[1] << lh) | ph[1]
-	p[2] = (pk[2] << lh) | ph[2]
+	p[0] = pk[0] | ph[0]
+	p[1] = pk[1] | ph[1]
+	p[2] = pk[2] | ph[2]
 	return
 }

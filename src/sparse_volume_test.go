@@ -105,7 +105,11 @@ func TestPoint2Key(t *testing.T) {
 	for testInd, test := range point2keyTests {
 		got := point2key(test.p)
 		if got != test.key {
-			t.Errorf("test #%d: point2key(%d): want %d (0x%x), got %d (0x%x)", testInd, test.key, test.key, got, got)
+			t.Errorf("test #%d: point2key(%v): want %d (0x%x), got %d (0x%x)", testInd, test.p, test.key, test.key, got, got)
+		}
+		gotP := key2point(test.key)
+		if gotP != test.p {
+			t.Errorf("test #%d: key2point(%d): want %v, got %v", testInd, test.key, test.p, gotP)
 		}
 	}
 }
