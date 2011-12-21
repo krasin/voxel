@@ -304,7 +304,8 @@ type Location16 [2]int16
 
 func Rasterize(m Mesh, n int) Uint16Volume {
 	scale := m.N[0] / int64(n)
-	vol := NewOctree(n)
+	vol := NewSparseVolume(n)
+	//vol := NewOctree(n)
 	// Rasterize edges
 	for index, t := range m.Triangle {
 		AllTriangleDots(t[0], t[1], t[2], scale, vol, uint16(1+(index%10)))

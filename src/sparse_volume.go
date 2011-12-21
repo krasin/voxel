@@ -11,8 +11,146 @@ const (
 )
 
 type SparseVolume struct {
-	// Depth of octree
-	lk uint
+	n      int
+	lk     int
+	cubes  [][]uint16
+	colors []uint16
+}
+
+func NewSparseVolume(n int) (v *SparseVolume) {
+	lk := int(log2(int64(n)) - lh)
+	return &SparseVolume{
+		n:      n,
+		lk:     lk,
+		cubes:  make([][]uint16, 1<<uint(3*lk)),
+		colors: make([]uint16, 1<<uint(3*lk)),
+	}
+}
+
+func (v *SparseVolume) Get(x, y, z int) bool {
+	return v.GetV(x, y, z) != 0
+}
+
+func (v *SparseVolume) GetV(x, y, z int) uint16 {
+	if x < 0 || y < 0 || z < 0 || x >= v.n || y >= v.n || z >= v.n {
+		return 0
+	}
+	p := Point16{uint16(x), uint16(y), uint16(z)}
+	k := point2k(p)
+	if v.cubes[k] == nil {
+		return v.colors[k]
+	}
+	return v.cubes[k][point2h(p)]
+}
+
+func (v *SparseVolume) XLen() int {
+	return v.n
+}
+
+func (v *SparseVolume) YLen() int {
+	return v.n
+}
+
+func (v *SparseVolume) ZLen() int {
+	return v.n
+}
+
+func (v *SparseVolume) Set(x, y, z int, val uint16) {
+	if x < 0 || y < 0 || z < 0 || x >= v.n || y >= v.n || z >= v.n {
+		return
+	}
+	p := Point16{uint16(x), uint16(y), uint16(z)}
+	k := point2k(p)
+	if v.cubes[k] == nil {
+		if v.colors[k] == val {
+			return
+		}
+		v.cubes[k] = make([]uint16, 1<<(3*lh))
+	}
+	v.cubes[k][point2h(p)] = val
+}
+
+func (v *SparseVolume) SetAllFilled(val uint16) {
+	for k, cube := range v.cubes {
+		if cube == nil {
+			if v.colors[k] != 0 {
+				v.colors[k] = val
+			}
+			continue
+		}
+		for h, cur := range cube {
+			if cur != 0 {
+				cube[h] = val
+			}
+		}
+	}
+}
+
+func (v *SparseVolume) MapBoundary(f func(x, y, z int)) {
+	for k, cube := range v.cubes {
+		if cube == nil {
+			panic("TODO: visit edges of the cube")
+		}
+		for h, cur := range cube {
+			if cur == 0 {
+				continue
+			}
+			p := key2point(kh2key(k, h))
+
+			if p[0] == 0 || p[1] == 0 || p[2] == 0 ||
+				int(p[0]) == v.n-1 || int(p[1]) == v.n-1 || int(p[2]) == v.n-1 {
+				f(int(p[0]), int(p[1]), int(p[2]))
+				continue
+			}
+			hp := h2point(h)
+
+			was := false
+			for i := 0; i < 3; i++ {
+				if hp[i] > 0 {
+					hp2 := hp
+					hp2[i]--
+					if cube[point2h(hp2)] == 0 {
+						f(int(p[0]), int(p[1]), int(p[2]))
+						was = true
+						break
+					}
+				}
+				if hp[i] < (1<<lh)-1 {
+					hp2 := hp
+					hp2[i]++
+					if cube[point2h(hp2)] == 0 {
+						f(int(p[0]), int(p[1]), int(p[2]))
+						was = true
+						break
+					}
+				}
+			}
+			if was {
+				continue
+			}
+			// Slow path for cube edges
+			for i := 0; i < 3; i++ {
+				if hp[i] == 0 {
+					p2 := p
+					p2[i]--
+					if v.GetV(int(p2[0]), int(p2[1]), int(p2[2])) == 0 {
+						f(int(p[0]), int(p[1]), int(p[2]))
+						was = true
+						break
+					}
+				}
+				if hp[i] == (1<<lh)-1 {
+					p2 := p
+					p2[i]++
+					if v.GetV(int(p2[0]), int(p2[1]), int(p2[2])) == 0 {
+						f(int(p[0]), int(p[1]), int(p[2]))
+						was = true
+						break
+					}
+				}
+			}
+		}
+	}
 }
 
 func point2key(p Point16) uint64 {
@@ -71,4 +209,8 @@ func key2point(key uint64) (p Point16) {
 	p[1] = pk[1] | ph[1]
 	p[2] = pk[2] | ph[2]
 	return
+}
+
+func kh2key(k, h int) uint64 {
+	return (uint64(k) << (3 * lh)) | uint64(h)
 }
