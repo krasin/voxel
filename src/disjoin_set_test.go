@@ -27,6 +27,7 @@ var disjoinSetTests = []disjoinSetTest{
 			{Op: dsMake, X: 1},
 			{Op: dsMake, X: 2},
 			{Op: dsMake, X: 3},
+			{Op: dsMake, X: 4},
 			{Op: dsFind, X: 0, Y: 0},
 			{Op: dsFind, X: 1, Y: 1},
 
@@ -38,9 +39,13 @@ var disjoinSetTests = []disjoinSetTest{
 			{Op: dsFind, X: 0, Y: 0},
 			{Op: dsFind, X: 2, Y: 0},
 
-			{Op: dsJoin, X: 3, Y: 2},
-			{Op: dsFind, X: 0, Y: 0},
-			{Op: dsFind, X: 2, Y: 0},
+			{Op: dsJoin, X: 3, Y: 4},
+			{Op: dsFind, X: 3, Y: 3},
+			{Op: dsFind, X: 4, Y: 3},
+
+			{Op: dsJoin, X: 3, Y: 0},
+			{Op: dsFind, X: 0, Y: 3},
+			{Op: dsFind, X: 3, Y: 3},
 		},
 	},
 }
