@@ -17,10 +17,10 @@ func (s *DisjoinSet) Make() int {
 }
 
 func (s *DisjoinSet) Find(x int) int {
-	if s.parent[x] == x {
-		return x
+	if s.parent[x] != x {
+		s.parent[x] = s.Find(s.parent[x])
 	}
-	return s.Find(s.parent[x])
+	return s.parent[x]
 }
 
 func (s *DisjoinSet) Join(x, y int) {
