@@ -10,13 +10,14 @@ func NewDisjoinSet() *DisjoinSet {
 }
 
 func (s *DisjoinSet) Make() int {
-	s.parent = append(s.parent, -1)
+	x := len(s.parent)
+	s.parent = append(s.parent, x)
 	s.rank = append(s.rank, 0)
-	return len(s.parent) - 1
+	return x
 }
 
 func (s *DisjoinSet) Find(x int) int {
-	if s.parent[x] == -1 {
+	if s.parent[x] == x {
 		return x
 	}
 	return s.Find(s.parent[x])
