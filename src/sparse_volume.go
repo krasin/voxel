@@ -161,10 +161,22 @@ func point2k(p Point16) int {
 	return (spread3(byte(p[0]>>lh)) << 2) + (spread3(byte(p[1]>>lh)) << 1) + spread3(byte(p[2]>>lh))
 }
 
+func k2cube(k int) (p Point16) {
+	p[0] = uint16(join3((k >> 2) & 0x249249))
+	p[1] = uint16(join3((k >> 1) & 0x249249))
+	p[2] = uint16(join3(k & 0x249249))
+	return
+}
+
+func cube2k(p Point16) int {
+	return (spread3(byte(p[0])) << 2) + (spread3(byte(p[1])) << 1) + spread3(byte(p[2]))
+}
+
 func k2point(k int) (p Point16) {
-	p[0] = uint16(join3((k>>2)&0x249249)) << lh
-	p[1] = uint16(join3((k>>1)&0x249249)) << lh
-	p[2] = uint16(join3(k&0x249249)) << lh
+	p = k2cube(k)
+	p[0] = p[0] << lh
+	p[1] = p[1] << lh
+	p[2] = p[2] << lh
 	return
 }
 
@@ -213,4 +225,8 @@ func key2point(key uint64) (p Point16) {
 
 func kh2key(k, h int) uint64 {
 	return (uint64(k) << (3 * lh)) | uint64(h)
+}
+
+func kh2point(k, h int) Point16 {
+	return key2point(kh2key(k, h))
 }
