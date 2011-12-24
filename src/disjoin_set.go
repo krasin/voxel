@@ -32,8 +32,14 @@ func (s *DisjoinSet) Find(x int) int {
 
 // Join merges two clusters.
 func (s *DisjoinSet) Join(x, y int) {
+	if x == y {
+		return
+	}
 	xRoot := s.Find(x)
 	yRoot := s.Find(y)
+	if xRoot == yRoot {
+		return
+	}
 
 	switch {
 	case s.rank[xRoot] < s.rank[yRoot]:
