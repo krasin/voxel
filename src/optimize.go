@@ -21,6 +21,7 @@ var (
 	Black  = color.RGBA{0, 0, 0, 255}
 	Yellow = color.RGBA{255, 255, 0, 255}
 	Green  = color.RGBA{0, 255, 0, 255}
+	Pink   = color.RGBA{255, 20, 147, 255}
 	colors = []color.RGBA{
 		{0, 0, 0, 255},
 		{255, 255, 0, 255},
@@ -33,6 +34,8 @@ var (
 		{255, 0, 128, 255},
 		{0, 128, 255, 255},
 		{128, 0, 255, 255},
+		{255, 255, 128, 255},
+		{128, 255, 128, 255},
 		{128, 128, 255, 255},
 	}
 
@@ -44,6 +47,13 @@ var (
 	n4dx = n6dx[0:4]
 	n4dy = n6dy[0:4]
 )
+
+func PinkX(n int) color.RGBA {
+	if n < 200 {
+		return color.RGBA{Pink.R, Pink.G + uint8(n), Pink.B, 255}
+	}
+	return Pink
+}
 
 type BoolVoxelVolume interface {
 	Get(x, y, z int) bool
@@ -312,6 +322,107 @@ func Rasterize(m Mesh, n int) Uint16Volume {
 	}
 	fmt.Fprintf(os.Stderr, "Triangle rasterization complete\n")
 
+	/*	ds := NewDisjoinSet()
+		// Reserve color for outer space
+		ds.Make()
+
+		shift := 11
+
+		// Let's color cubes.
+		for k, cube := range vol.cubes {
+			// Skip cubes with leaf voxels
+			if cube != nil {
+				continue
+			}
+			p := k2cube(k)
+
+			// If this is a cube at the edge of the space, it's a part of outer space.
+			if p[0] == 0 || p[1] == 0 || p[2] == 0 ||
+				int(p[0]) == (1<<uint(vol.lk))-1 || int(p[1]) == (1<<uint(vol.lk))-1 || int(p[2]) == (1<<uint(vol.lk))-1 {
+				vol.colors[k] = uint16(shift + ds.Find(0))
+				continue
+			}
+
+			// Look if any neighbour has already color assigned
+			for i := 0; i < 3; i++ {
+				for j := -1; j <= 1; j += 2 {
+					p2 := p
+					p2[i] = uint16(int(p2[i]) + j)
+					k2 := cube2k(p2)
+					if k2 >= len(vol.colors) {
+						panic(fmt.Sprintf("k2: %d, len(vol.colors): %d, len(vol.cubes): %d, p: %v, p2: %v, k: %d", k2, len(vol.colors), len(vol.cubes), p, p2, k))
+					}
+					if vol.colors[k2] == 0 {
+						continue
+					}
+					if vol.colors[k] == 0 {
+						vol.colors[k] = vol.colors[k2]
+					} else {
+						ds.Join(int(vol.colors[k])-shift, int(vol.colors[k2])-shift)
+					}
+				}
+			}
+
+			// If there's no colored neighbour, introduce a new color.
+			if vol.colors[k] == 0 {
+				vol.colors[k] = uint16(shift + ds.Make())
+			}
+		}
+
+		// Now, we need to go through cubes which have leaf voxels
+		for k, cube := range vol.cubes {
+			if cube == nil {
+				continue
+			}
+			for h := range cube {
+				p := kh2point(k, h)
+				if vol.GetV(int(p[0]), int(p[1]), int(p[2])) != 0 {
+					continue
+				}
+				// Look for neighbours of this leaf voxel
+				for i := 0; i < 3; i++ {
+					for j := -1; j <= 1; j += 2 {
+						p2 := p
+						p2[i] = uint16(int(p2[i]) + j)
+						color2 := vol.GetV(int(p2[0]), int(p2[1]), int(p2[2]))
+						if int(color2) < shift {
+							continue
+						}
+						color := vol.GetV(int(p[0]), int(p[1]), int(p[2]))
+						if color == 0 {
+							vol.Set(int(p[0]), int(p[1]), int(p[2]), color2)
+						} else {
+							ds.Join(int(color)-shift, int(color2)-shift)
+						}
+					}
+				}
+				if vol.GetV(int(p[0]), int(p[1]), int(p[2])) == 0 {
+					vol.Set(int(p[0]), int(p[1]), int(p[2]), uint16(shift+ds.Make()))
+				}
+			}
+		}
+
+		// Canonicalize colors
+		canonicalZero := uint16(shift + ds.Find(0))
+		for k, cube := range vol.cubes {
+			if cube == nil {
+				vol.colors[k] = uint16(shift + ds.Find(int(vol.colors[k])-shift))
+				if vol.colors[k] == canonicalZero {
+					vol.colors[k] = 0
+				}
+				continue
+			}
+			for h := 0; h < len(cube); h++ {
+				if int(cube[h]) < shift {
+					continue
+				}
+				cube[h] = uint16(shift + ds.Find(int(cube[h])-shift))
+				if cube[h] == canonicalZero {
+					cube[h] = 0
+				}
+			}
+		}*/
+
 	var cnt int
 	bmp := image.NewRGBA(image.Rect(0, 0, n, n))
 	var q, q2 []Location16
@@ -350,10 +461,10 @@ func Rasterize(m Mesh, n int) Uint16Volume {
 			for x := 0; x < n; x++ {
 				for y := 0; y < n; y++ {
 					v := vol.GetV(x, y, z)
-					if v <= 11 {
+					if int(v) < len(colors) {
 						bmp.Set(x, y, colors[v])
 					} else {
-						bmp.Set(x, y, Black)
+						bmp.Set(x, y, PinkX(int(v)))
 					}
 				}
 			}
