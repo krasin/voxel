@@ -365,11 +365,11 @@ func Rasterize(m Mesh, n int) Uint16Volume {
 		if cube == nil {
 			continue
 		}
-		for h := range cube {
-			p := kh2point(k, h)
-			if vol.GetV(int(p[0]), int(p[1]), int(p[2])) != 0 {
+		for h, val := range cube {
+			if val != 0 {
 				continue
 			}
+			p := kh2point(k, h)
 			// Look for neighbours of this leaf voxel
 			for i := 0; i < 3; i++ {
 				for j := -1; j <= 1; j += 2 {
