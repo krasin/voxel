@@ -388,7 +388,7 @@ func Rasterize(m Mesh, n int) Uint16Volume {
 					}
 				}
 			}
-			if vol.GetV(int(p[0]), int(p[1]), int(p[2])) == 0 {
+			if color == 0 {
 				vol.Set(int(p[0]), int(p[1]), int(p[2]), uint16(shift+ds.Make()))
 			}
 		}
