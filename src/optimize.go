@@ -184,20 +184,7 @@ func Optimize(vol Uint16Volume, n int) {
 			return
 		}
 	})
-	/*	for y := 0; y < vol.YLen(); y++ {
-		for z := 0; z < vol.ZLen(); z++ {
-			for x := 0; x < vol.XLen(); x++ {
-				if IsBoundary(vol, x, y, z) && z > 8 {
-					vol.Set(x, y, z, 1)
-					q = append(q, Index(vol, x, y, z))
-					continue
-				}
-				//				if vol.Get(x, y, z) {
-				//					vol.Set(x, y, z, math.MaxUint16-3)
-				//				}
-			}
-		}
-	}*/
+
 	for len(q) > 0 {
 		fmt.Fprintf(os.Stderr, "len(q): %d\n", len(q))
 		q, q2 = q2[:0], q
@@ -315,7 +302,7 @@ type Location16 [2]int16
 func Rasterize(m Mesh, n int) Uint16Volume {
 	scale := m.N[0] / int64(n)
 	vol := NewSparseVolume(n)
-	//vol := NewOctree(n)
+
 	// Rasterize edges
 	for index, t := range m.Triangle {
 		AllTriangleDots(t[0], t[1], t[2], scale, vol, uint16(1+(index%10)))
@@ -425,38 +412,7 @@ func Rasterize(m Mesh, n int) Uint16Volume {
 
 	var cnt int
 	bmp := image.NewRGBA(image.Rect(0, 0, n, n))
-	//	var q, q2 []Location16
 	for z := 1; z < n; z++ {
-		/*		cnt = 0
-				q = q[:0]
-				q2 = q2[:0]
-				for x := 0; x < n; x++ {
-					for y := 0; y < n; y++ {
-						if !vol.Get(x, y, z) {
-							if x > 0 && y > 0 && z > 0 && x < n-1 && y < n-1 && z < n-1 {
-								vol.Set(x, y, z, 11)
-							} else {
-								q = append(q, Location16{int16(x), int16(y)})
-							}
-						}
-					}
-				}
-				for len(q) > 0 {
-					q, q2 = q2[:0], q
-					for _, cur := range q2 {
-						for i := 0; i < 4; i++ {
-							x1 := int(cur[0]) + n4dx[i]
-							y1 := int(cur[1]) + n4dy[i]
-							if x1 <= 0 || x1 >= n-1 || y1 <= 0 || y1 >= n-1 {
-								continue
-							}
-							if vol.GetV(x1, y1, z) == 11 {
-								vol.Set(x1, y1, z, 0)
-								q = append(q, Location16{int16(x1), int16(y1)})
-							}
-						}
-					}
-				}*/
 		if z%10 == 0 {
 			for x := 0; x < n; x++ {
 				for y := 0; y < n; y++ {
