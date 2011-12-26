@@ -89,7 +89,55 @@ func (v *SparseVolume) SetAllFilled(val uint16) {
 func (v *SparseVolume) MapBoundary(f func(x, y, z int)) {
 	for k, cube := range v.cubes {
 		if cube == nil {
-			panic("TODO: visit edges of the cube")
+			// Skip empty cubes
+			if v.colors[k] == 0 {
+				continue
+			}
+			panic("not tested")
+			p := k2point(k)
+			side := 1 << uint(v.lk)
+			for i := 1; i < side-1; i++ {
+				for j := 1; j < side-1; j++ {
+					var p2 Point16
+
+					p2[0] = uint16(int(p[0]) + i)
+					p2[1] = uint16(int(p[1]) + j)
+					p2[2] = uint16(int(p[2]))
+					if p2[2] == 0 || v.GetV(int(p2[0]), int(p2[1]), int(p2[2])-1) == 0 {
+						f(int(p2[0]), int(p2[1]), int(p2[2]))
+					}
+
+					p2[2] = uint16(int(p[2]) + side - 1)
+					if v.GetV(int(p2[0]), int(p2[1]), int(p2[2])+1) == 0 {
+						f(int(p2[0]), int(p2[1]), int(p2[2]))
+					}
+
+					p2[0] = uint16(int(p[0]))
+					p2[1] = uint16(int(p[1]) + i)
+					p2[2] = uint16(int(p[2]) + j)
+					if p2[0] == 0 || v.GetV(int(p2[0])-1, int(p2[1]), int(p2[2])) == 0 {
+						f(int(p2[0]), int(p2[1]), int(p2[2]))
+					}
+
+					p2[0] = uint16(int(p[0]) + side - 1)
+					if v.GetV(int(p2[0])+1, int(p2[1]), int(p2[2])) == 0 {
+						f(int(p2[0]), int(p2[1]), int(p2[2]))
+					}
+
+					p2[0] = uint16(int(p[0]) + i)
+					p2[1] = uint16(int(p[1]))
+					p2[2] = uint16(int(p[2]) + j)
+					if p2[1] == 0 || v.GetV(int(p2[0]), int(p2[1])-1, int(p2[2])) == 0 {
+						f(int(p2[0]), int(p2[1]), int(p2[2]))
+					}
+
+					p2[1] = uint16(int(p[1]) + side - 1)
+					if v.GetV(int(p2[0]), int(p2[1])+1, int(p2[2])) == 0 {
+						f(int(p2[0]), int(p2[1]), int(p2[2]))
+					}
+				}
+			}
+			panic("TODO: visit 6 edges of the cube")
 		}
 		for h, cur := range cube {
 			if cur == 0 {
