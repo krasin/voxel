@@ -65,7 +65,12 @@ func (v *SparseVolume) Set(x, y, z int, val uint16) {
 		if v.colors[k] == val {
 			return
 		}
+		old := v.colors[k]
+		v.colors[k] = 0
 		v.cubes[k] = make([]uint16, 1<<(3*lh))
+		for i := range v.cubes[k] {
+			v.cubes[k][i] = old
+		}
 	}
 	v.cubes[k][point2h(p)] = val
 }
@@ -93,51 +98,35 @@ func (v *SparseVolume) MapBoundary(f func(x, y, z int)) {
 			if v.colors[k] == 0 {
 				continue
 			}
-			panic("not tested")
 			p := k2point(k)
 			side := 1 << uint(v.lk)
-			for i := 1; i < side-1; i++ {
-				for j := 1; j < side-1; j++ {
-					var p2 Point16
-
-					p2[0] = uint16(int(p[0]) + i)
-					p2[1] = uint16(int(p[1]) + j)
-					p2[2] = uint16(int(p[2]))
-					if p2[2] == 0 || v.GetV(int(p2[0]), int(p2[1]), int(p2[2])-1) == 0 {
-						f(int(p2[0]), int(p2[1]), int(p2[2]))
+			for x := 0; x < side; x++ {
+				var p2 Point16
+				p2[0] = p[0] + uint16(x)
+				cnt1 := 0
+				if x == 0 || x == side-1 {
+					cnt1++
+				}
+				for y := 0; y < side; y++ {
+					p2[1] = p[1] + uint16(y)
+					cnt2 := cnt1
+					if y == 0 || y == side-1 {
+						cnt2++
 					}
-
-					p2[2] = uint16(int(p[2]) + side - 1)
-					if v.GetV(int(p2[0]), int(p2[1]), int(p2[2])+1) == 0 {
-						f(int(p2[0]), int(p2[1]), int(p2[2]))
-					}
-
-					p2[0] = uint16(int(p[0]))
-					p2[1] = uint16(int(p[1]) + i)
-					p2[2] = uint16(int(p[2]) + j)
-					if p2[0] == 0 || v.GetV(int(p2[0])-1, int(p2[1]), int(p2[2])) == 0 {
-						f(int(p2[0]), int(p2[1]), int(p2[2]))
-					}
-
-					p2[0] = uint16(int(p[0]) + side - 1)
-					if v.GetV(int(p2[0])+1, int(p2[1]), int(p2[2])) == 0 {
-						f(int(p2[0]), int(p2[1]), int(p2[2]))
-					}
-
-					p2[0] = uint16(int(p[0]) + i)
-					p2[1] = uint16(int(p[1]))
-					p2[2] = uint16(int(p[2]) + j)
-					if p2[1] == 0 || v.GetV(int(p2[0]), int(p2[1])-1, int(p2[2])) == 0 {
-						f(int(p2[0]), int(p2[1]), int(p2[2]))
-					}
-
-					p2[1] = uint16(int(p[1]) + side - 1)
-					if v.GetV(int(p2[0]), int(p2[1])+1, int(p2[2])) == 0 {
-						f(int(p2[0]), int(p2[1]), int(p2[2]))
+					for z := 0; z < side; z++ {
+						if cnt2 == 2 && (z == 0 || z == side-10) {
+							if z == 0 {
+								z = side - 2
+							}
+							continue
+						}
+						p2[2] = p[2] + uint16(z)
+						if IsBoundary(v, int(p2[0]), int(p2[1]), int(p2[2])) {
+							f(int(p2[0]), int(p2[1]), int(p2[2]))
+						}
 					}
 				}
 			}
-			panic("TODO: visit 6 edges of the cube")
 		}
 		for h, cur := range cube {
 			if cur == 0 {
