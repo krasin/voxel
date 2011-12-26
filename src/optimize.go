@@ -370,6 +370,7 @@ func Rasterize(m Mesh, n int) Uint16Volume {
 				continue
 			}
 			p := kh2point(k, h)
+			color := val
 			// Look for neighbours of this leaf voxel
 			for i := 0; i < 3; i++ {
 				for j := -1; j <= 1; j += 2 {
@@ -379,9 +380,9 @@ func Rasterize(m Mesh, n int) Uint16Volume {
 					if int(color2) < shift {
 						continue
 					}
-					color := vol.GetV(int(p[0]), int(p[1]), int(p[2]))
 					if color == 0 {
 						vol.Set(int(p[0]), int(p[1]), int(p[2]), color2)
+						color = color2
 					} else {
 						ds.Join(int(color)-shift, int(color2)-shift)
 					}
