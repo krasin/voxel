@@ -303,12 +303,14 @@ func Rasterize(m Mesh, n int) Uint16Volume {
 	scale := m.N[0] / int64(n)
 	vol := NewSparseVolume(n)
 
-	// Rasterize edges
+	StartTiming("Rasterize triangles")
 	for index, t := range m.Triangle {
 		AllTriangleDots(t[0], t[1], t[2], scale, vol, uint16(1+(index%10)))
 	}
 	fmt.Fprintf(os.Stderr, "Triangle rasterization complete\n")
+	StopTiming("Rasterize triangles")
 
+	StartTiming("Rasterize cubes")
 	ds := NewDisjoinSet()
 	// Reserve color for outer space
 	ds.Make()
@@ -355,6 +357,8 @@ func Rasterize(m Mesh, n int) Uint16Volume {
 			vol.colors[k] = uint16(shift + ds.Make())
 		}
 	}
+	StopTiming("Rasterize cubes")
+	StartTiming("Rasterize leaf voxels")
 
 	// Now, we need to go through cubes which have leaf voxels
 	for k, cube := range vol.cubes {
@@ -388,7 +392,9 @@ func Rasterize(m Mesh, n int) Uint16Volume {
 			}
 		}
 	}
+	StopTiming("Rasterize leaf voxels")
 
+	StartTiming("Rasterize.CanonicalizeColors")
 	// Canonicalize colors
 	canonicalZero := uint16(shift + ds.Find(0))
 	for k, cube := range vol.cubes {
@@ -409,8 +415,9 @@ func Rasterize(m Mesh, n int) Uint16Volume {
 			}
 		}
 	}
+	StopTiming("Rasterize.CanonicalizeColors")
 
-	var cnt int
+	StartTiming("Rasterize.DrawSlices")
 	bmp := image.NewRGBA(image.Rect(0, 0, n, n))
 	for z := 1; z < n; z++ {
 		if z%10 == 0 {
@@ -430,7 +437,8 @@ func Rasterize(m Mesh, n int) Uint16Volume {
 			f.Close()
 		}
 	}
-	fmt.Fprintf(os.Stderr, "Last layer: %d dots\n", cnt)
+	StopTiming("Rasterize.DrawSlices")
+	fmt.Fprintf(os.Stderr, "Rasterize complete\n")
 	return vol
 }
 
