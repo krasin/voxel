@@ -220,22 +220,11 @@ func Optimize(vol Uint16Volume, n int) {
 }
 
 func WriteNptl(vol Uint16Volume, grid Grid, output io.Writer) (err error) {
-	//	v := 0
 	stepX := (grid.P1[0] - grid.P0[0]) / float64(vol.XLen())
 	stepY := (grid.P1[1] - grid.P0[1]) / float64(vol.YLen())
 	stepZ := (grid.P1[2] - grid.P0[2]) / float64(vol.ZLen())
 
 	vol.MapBoundary(func(x, y, z int) {
-		//	for y := 0; y < vol.YLen(); y++ {
-		//		for z := 0; z < vol.ZLen(); z++ {
-		//			for x := 0; x < vol.XLen(); x++ {
-		//				if !vol.Get(x, y, z) {
-		//					continue
-		//				}
-		//				v++
-		//				if !IsBoundary(vol, x, y, z) {
-		//					continue
-		//				}
 		nx, ny, nz := Normal(vol, x, y, z)
 		if _, err = fmt.Fprintf(output, "%f %f %f %f %f %f\n",
 			grid.P0[0]+float64(x)*stepX,
@@ -244,8 +233,6 @@ func WriteNptl(vol Uint16Volume, grid Grid, output io.Writer) (err error) {
 			nx, ny, nz); err != nil {
 			return
 		}
-		//			}
-		//		}
 	})
 	v := vol.Volume()
 	fmt.Fprintf(os.Stderr, "Volume is filled by %v%%\n", float64(v)*float64(100)/(float64(vol.XLen())*float64(vol.YLen())*float64(vol.ZLen())))
