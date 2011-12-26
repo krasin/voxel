@@ -16,33 +16,28 @@ Minimum Viable Product for 3d print optimizer.
 Stage 0: be able to optimize "by hand".
 Pipeline:
 
-1. binvox
-2. optimize
-3. PoissonRecon
-4. meshlab
+1. optimize
+2. PoissonRecon
+3. meshlab
 
-Missing piece: optimize.
+Ideally, optimize should also be able to output .stl and not require PoissonRecon/meshlab.
 
 Optimize plan:
 
 1. Parse .schematic file (done)
 2. Write .npts (done)
 3. Remove deep voxels (done)
-4. Make a hole (done)
-5. Implement voxelization
+4. Make a hole (done, but the algorithm should be better)
+5. Implement voxelization (almost done)
 
-Esoteric knowledge:
+Rasterizer is now almost ready. The only known issue (except that the speed is still suboptimal) is that it does not handle leaky STL models.
 
-1. ClipTriangle is broken. See the tests
-2. Wavelet rasterization: triangle should go into one octant if it's exactly on the side to avoid double counting.
-3. Wavelet rasterization: formulas for 3d case are suspicious in the article, because {K,L}_{y,z} are not used.
+Plan for voxelizer:
 
-Rasterization is hard. 
-1. Evaluate binvox again. Probably, it has an appropriate output format.
-2. Need to find another rasterizer (an utility or the library), if binvox is not an option
+1. Make it a library and open source it
+2. Make a command line utility (golvox.com is taken)
+3. Prepare binaries for Linux (standalone binary), Windows and (maybe) MacOS.
+4. Set up the website
+5. Make a service for public use (it's unclear, what's better: free or require to pay with bitcoins/whatever.)
 
-TODO: implement rasterizer later, much later.
-
-Naive rasterizer, issues:
-1. Internal hollows are filled
-2. Edge is not continuous
+It looks like nothing stops to start with #1 tomorrow.
