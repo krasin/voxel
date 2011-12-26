@@ -159,6 +159,7 @@ type Uint16Volume interface {
 	GetV(x, y, z int) uint16
 	SetAllFilled(v uint16)
 	MapBoundary(f func(x, y, z int))
+	Volume() int64
 }
 
 func Index(vol Uint16Volume, x, y, z int) int {
@@ -218,32 +219,35 @@ func Optimize(vol Uint16Volume, n int) {
 	return
 }
 
-func WriteNptl(vol BoolVoxelVolume, grid Grid, output io.Writer) (err error) {
-	v := 0
+func WriteNptl(vol Uint16Volume, grid Grid, output io.Writer) (err error) {
+	//	v := 0
 	stepX := (grid.P1[0] - grid.P0[0]) / float64(vol.XLen())
 	stepY := (grid.P1[1] - grid.P0[1]) / float64(vol.YLen())
 	stepZ := (grid.P1[2] - grid.P0[2]) / float64(vol.ZLen())
-	for y := 0; y < vol.YLen(); y++ {
-		for z := 0; z < vol.ZLen(); z++ {
-			for x := 0; x < vol.XLen(); x++ {
-				if !vol.Get(x, y, z) {
-					continue
-				}
-				v++
-				if !IsBoundary(vol, x, y, z) {
-					continue
-				}
-				nx, ny, nz := Normal(vol, x, y, z)
-				if _, err = fmt.Fprintf(output, "%f %f %f %f %f %f\n",
-					grid.P0[0]+float64(x)*stepX,
-					grid.P0[1]+float64(y)*stepY,
-					grid.P0[2]+float64(z)*stepZ,
-					nx, ny, nz); err != nil {
-					return
-				}
-			}
+
+	vol.MapBoundary(func(x, y, z int) {
+		//	for y := 0; y < vol.YLen(); y++ {
+		//		for z := 0; z < vol.ZLen(); z++ {
+		//			for x := 0; x < vol.XLen(); x++ {
+		//				if !vol.Get(x, y, z) {
+		//					continue
+		//				}
+		//				v++
+		//				if !IsBoundary(vol, x, y, z) {
+		//					continue
+		//				}
+		nx, ny, nz := Normal(vol, x, y, z)
+		if _, err = fmt.Fprintf(output, "%f %f %f %f %f %f\n",
+			grid.P0[0]+float64(x)*stepX,
+			grid.P0[1]+float64(y)*stepY,
+			grid.P0[2]+float64(z)*stepZ,
+			nx, ny, nz); err != nil {
+			return
 		}
-	}
+		//			}
+		//		}
+	})
+	v := vol.Volume()
 	fmt.Fprintf(os.Stderr, "Volume is filled by %v%%\n", float64(v)*float64(100)/(float64(vol.XLen())*float64(vol.YLen())*float64(vol.ZLen())))
 	return
 }

@@ -190,6 +190,26 @@ func (v *SparseVolume) MapBoundary(f func(x, y, z int)) {
 	}
 }
 
+func (v *SparseVolume) Volume() (res int64) {
+	for k, cube := range v.cubes {
+		if cube == nil {
+			// Skip empty cubes
+			if v.colors[k] == 0 {
+				continue
+			}
+			side := int64(1 << uint(v.lk))
+			res += side * side * side
+			continue
+		}
+		for _, val := range cube {
+			if val != 0 {
+				res++
+			}
+		}
+	}
+	return res
+}
+
 func point2key(p Point16) uint64 {
 	return uint64(point2k(p))<<(3*lh) + uint64(point2h(p))
 }
