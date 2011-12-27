@@ -210,6 +210,14 @@ func (v *SparseVolume) Volume() (res int64) {
 	return res
 }
 
+func log2(n int64) (res uint) {
+	for n > 1 {
+		n >>= 1
+		res++
+	}
+	return
+}
+
 func point2key(p Point16) uint64 {
 	return uint64(point2k(p))<<(3*lh) + uint64(point2h(p))
 }

@@ -5,7 +5,6 @@ include $(GOROOT)/src/Make.inc
 TARG=optimize
 GOFILES=\
 	disjoin_set.go\
-	octree.go\
 	optimize.go\
 	sparse_volume.go\
 	stl_reader.go\
