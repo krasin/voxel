@@ -75,16 +75,16 @@ func (v *SparseVolume) Set(x, y, z int, val uint16) {
 	v.cubes[k][point2h(p)] = val
 }
 
-func (v *SparseVolume) SetAllFilled(val uint16) {
+func (v *SparseVolume) SetAllFilled(threshold, val uint16) {
 	for k, cube := range v.cubes {
 		if cube == nil {
-			if v.colors[k] != 0 {
+			if v.colors[k] >= threshold {
 				v.colors[k] = val
 			}
 			continue
 		}
 		for h, cur := range cube {
-			if cur != 0 {
+			if cur >= threshold {
 				cube[h] = val
 			}
 		}
