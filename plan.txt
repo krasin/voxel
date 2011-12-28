@@ -34,10 +34,9 @@ Rasterizer is now almost ready. The only known issue (except that the speed is s
 
 Plan for voxelizer:
 
-1. Make it a library and open source it
+1. Make it a library
 2. Make a command line utility (golvox.com is taken)
 3. Prepare binaries for Linux (standalone binary), Windows and (maybe) MacOS.
 4. Set up the website
 5. Make a service for public use (it's unclear, what's better: free or require to pay with bitcoins/whatever.)
 
-It looks like nothing stops to start with #1 tomorrow.
