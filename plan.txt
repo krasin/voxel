@@ -34,6 +34,7 @@ Rasterizer is now almost ready. The only known issue (except that the speed is s
 
 Plan for voxelizer:
 
+0. Fix triangle rasterization: it's slow and it draws the triangle out of bounds.
 1. Make it a library
 2. Make a command line utility (golvox.com is taken)
 3. Prepare binaries for Linux (standalone binary), Windows and (maybe) MacOS.
