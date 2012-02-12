@@ -1,4 +1,4 @@
-package main
+package triangle
 
 import (
 	"math/big"
@@ -11,6 +11,10 @@ type Line [2]Point
 type Cube [2]Point
 
 const MaxJ = 10
+
+type VolumeSetter interface {
+	Set(x, y, z int, val uint16)
+}
 
 func NewVector(p1, p2 Point) Vector {
 	return Vector{p2[0] - p1[0], p2[1] - p1[1], p2[2] - p1[2]}
