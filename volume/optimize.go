@@ -11,6 +11,7 @@ import (
 	"os"
 
 	"github.com/krasin/stl"
+	"github.com/krasin/voxel/timing"
 	"github.com/krasin/voxel/triangle"
 )
 
@@ -289,14 +290,14 @@ func Rasterize(m Mesh, n int) Uint16Volume {
 	scale := m.N[0] / int64(n)
 	vol := NewSparseVolume(n)
 
-	StartTiming("Rasterize triangles")
+	timing.StartTiming("Rasterize triangles")
 	for index, t := range m.Triangle {
 		triangle.AllTriangleDots(t[0], t[1], t[2], scale, vol, uint16(1+(index%10)))
 	}
 	fmt.Fprintf(os.Stderr, "Triangle rasterization complete\n")
-	StopTiming("Rasterize triangles")
+	timing.StopTiming("Rasterize triangles")
 
-	StartTiming("Rasterize cubes")
+	timing.StartTiming("Rasterize cubes")
 	ds := NewDisjoinSet()
 	// Reserve color for outer space
 	ds.Make()
@@ -343,8 +344,8 @@ func Rasterize(m Mesh, n int) Uint16Volume {
 			vol.colors[k] = uint16(shift + ds.Make())
 		}
 	}
-	StopTiming("Rasterize cubes")
-	StartTiming("Rasterize leaf voxels")
+	timing.StopTiming("Rasterize cubes")
+	timing.StartTiming("Rasterize leaf voxels")
 
 	// Now, we need to go through cubes which have leaf voxels
 	for k, cube := range vol.cubes {
@@ -379,9 +380,9 @@ func Rasterize(m Mesh, n int) Uint16Volume {
 			}
 		}
 	}
-	StopTiming("Rasterize leaf voxels")
+	timing.StopTiming("Rasterize leaf voxels")
 
-	StartTiming("Rasterize.CanonicalizeColors")
+	timing.StartTiming("Rasterize.CanonicalizeColors")
 	// Canonicalize colors
 	canonicalZero := uint16(shift + ds.Find(0))
 	for k, cube := range vol.cubes {
@@ -402,9 +403,9 @@ func Rasterize(m Mesh, n int) Uint16Volume {
 			}
 		}
 	}
-	StopTiming("Rasterize.CanonicalizeColors")
+	timing.StopTiming("Rasterize.CanonicalizeColors")
 
-	StartTiming("Rasterize.DrawSlices")
+	timing.StartTiming("Rasterize.DrawSlices")
 	bmp := image.NewRGBA(image.Rect(0, 0, n, n))
 	for z := 1; z < n; z++ {
 		if z%10 == 0 {
@@ -424,46 +425,46 @@ func Rasterize(m Mesh, n int) Uint16Volume {
 			f.Close()
 		}
 	}
-	StopTiming("Rasterize.DrawSlices")
+	timing.StopTiming("Rasterize.DrawSlices")
 	fmt.Fprintf(os.Stderr, "Rasterize complete\n")
 	return vol
 }
 
 func main() {
-	StartTiming("total")
-	StartTiming("Read STL from Stdin")
+	timing.StartTiming("total")
+	timing.StartTiming("Read STL from Stdin")
 	triangles, err := ReadSTL(os.Stdin)
 	if err != nil {
 		log.Fatalf("ReadSTL: %v", err)
 	}
-	StopTiming("Read STL from Stdin")
+	timing.StopTiming("Read STL from Stdin")
 
-	StartTiming("STLToMesh")
+	timing.StartTiming("STLToMesh")
 	mesh := STLToMesh(VoxelSide*MeshMultiplier, triangles)
-	StopTiming("STLToMesh")
+	timing.StopTiming("STLToMesh")
 
-	StartTiming("MeshVolume")
+	timing.StartTiming("MeshVolume")
 	volume := MeshVolume(mesh.Triangle, 1)
 	if volume < 0 {
 		volume = -volume
 	}
 	fmt.Fprintf(os.Stderr, "Mesh volume (in mesh units): %d\n", volume)
 	fmt.Fprintf(os.Stderr, "Mesh volume (original units): %f\n", float64(volume)/float64(mesh.N[0]*mesh.N[1]*mesh.N[2])*(mesh.P1[0]-mesh.P0[0])*(mesh.P1[1]-mesh.P0[1])*(mesh.P1[2]-mesh.P0[2]))
-	StopTiming("MeshVolume")
+	timing.StopTiming("MeshVolume")
 
-	StartTiming("Rasterize")
+	timing.StartTiming("Rasterize")
 	vol := Rasterize(mesh, VoxelSide)
-	StopTiming("Rasterize")
+	timing.StopTiming("Rasterize")
 
-	StartTiming("Optimize")
+	timing.StartTiming("Optimize")
 	Optimize(vol, 22)
-	StopTiming("Optimize")
+	timing.StopTiming("Optimize")
 
-	StartTiming("WriteNptl")
+	timing.StartTiming("WriteNptl")
 	if err = WriteNptl(vol, mesh.Grid, os.Stdout); err != nil {
 		log.Fatalf("WriteNptl: %v", err)
 	}
-	StopTiming("WriteNptl")
-	StopTiming("total")
-	PrintTimings(os.Stderr)
+	timing.StopTiming("WriteNptl")
+	timing.StopTiming("total")
+	timing.PrintTimings(os.Stderr)
 }
