@@ -11,6 +11,7 @@ import (
 	"os"
 
 	"github.com/krasin/stl"
+	"github.com/krasin/voxel/set"
 	"github.com/krasin/voxel/timing"
 	"github.com/krasin/voxel/triangle"
 )
@@ -298,7 +299,7 @@ func Rasterize(m Mesh, n int) Uint16Volume {
 	timing.StopTiming("Rasterize triangles")
 
 	timing.StartTiming("Rasterize cubes")
-	ds := NewDisjoinSet()
+	ds := set.NewDisjoinSet()
 	// Reserve color for outer space
 	ds.Make()
 
