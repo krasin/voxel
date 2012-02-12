@@ -1,4 +1,4 @@
-package volume
+package main
 
 import (
 	"fmt"
@@ -14,6 +14,7 @@ import (
 	"github.com/krasin/voxel/set"
 	"github.com/krasin/voxel/timing"
 	"github.com/krasin/voxel/triangle"
+	"github.com/krasin/voxel/volume"
 )
 
 const (
@@ -270,7 +271,7 @@ type Location16 [2]int16
 
 func Rasterize(m Mesh, n int) Uint16Volume {
 	scale := m.N[0] / int64(n)
-	vol := NewSparseVolume(n)
+	vol := volume.NewSparseVolume(n)
 
 	timing.StartTiming("Rasterize triangles")
 	for index, t := range m.Triangle {
@@ -287,17 +288,17 @@ func Rasterize(m Mesh, n int) Uint16Volume {
 	shift := 11
 
 	// Let's color cubes.
-	for k, cube := range vol.cubes {
+	for k, cube := range vol.Cubes {
 		// Skip cubes with leaf voxels
 		if cube != nil {
 			continue
 		}
-		p := k2cube(k)
+		p := volume.K2cube(k)
 
 		// If this is a cube at the edge of the space, it's a part of outer space.
 		if p[0] == 0 || p[1] == 0 || p[2] == 0 ||
-			int(p[0]) == (1<<uint(vol.lk))-1 || int(p[1]) == (1<<uint(vol.lk))-1 || int(p[2]) == (1<<uint(vol.lk))-1 {
-			vol.colors[k] = uint16(shift + ds.Find(0))
+			int(p[0]) == (1<<uint(vol.LK))-1 || int(p[1]) == (1<<uint(vol.LK))-1 || int(p[2]) == (1<<uint(vol.LK))-1 {
+			vol.Colors[k] = uint16(shift + ds.Find(0))
 			continue
 		}
 
@@ -306,31 +307,31 @@ func Rasterize(m Mesh, n int) Uint16Volume {
 			for j := -1; j <= 1; j += 2 {
 				p2 := p
 				p2[i] = uint16(int(p2[i]) + j)
-				k2 := cube2k(p2)
-				if k2 >= len(vol.colors) {
-					panic(fmt.Sprintf("k2: %d, len(vol.colors): %d, len(vol.cubes): %d, p: %v, p2: %v, k: %d", k2, len(vol.colors), len(vol.cubes), p, p2, k))
+				k2 := volume.Cube2k(p2)
+				if k2 >= len(vol.Colors) {
+					panic(fmt.Sprintf("k2: %d, len(vol.Colors): %d, len(vol.Cubes): %d, p: %v, p2: %v, k: %d", k2, len(vol.Colors), len(vol.Cubes), p, p2, k))
 				}
-				if vol.colors[k2] == 0 {
+				if vol.Colors[k2] == 0 {
 					continue
 				}
-				if vol.colors[k] == 0 {
-					vol.colors[k] = vol.colors[k2]
+				if vol.Colors[k] == 0 {
+					vol.Colors[k] = vol.Colors[k2]
 				} else {
-					ds.Join(int(vol.colors[k])-shift, int(vol.colors[k2])-shift)
+					ds.Join(int(vol.Colors[k])-shift, int(vol.Colors[k2])-shift)
 				}
 			}
 		}
 
 		// If there's no colored neighbour, introduce a new color.
-		if vol.colors[k] == 0 {
-			vol.colors[k] = uint16(shift + ds.Make())
+		if vol.Colors[k] == 0 {
+			vol.Colors[k] = uint16(shift + ds.Make())
 		}
 	}
 	timing.StopTiming("Rasterize cubes")
 	timing.StartTiming("Rasterize leaf voxels")
 
 	// Now, we need to go through cubes which have leaf voxels
-	for k, cube := range vol.cubes {
+	for k, cube := range vol.Cubes {
 		if cube == nil {
 			continue
 		}
@@ -338,7 +339,7 @@ func Rasterize(m Mesh, n int) Uint16Volume {
 			if val != 0 {
 				continue
 			}
-			p := kh2point(k, h)
+			p := volume.Kh2point(k, h)
 			color := val
 			// Look for neighbours of this leaf voxel
 			for i := 0; i < 3; i++ {
@@ -367,11 +368,11 @@ func Rasterize(m Mesh, n int) Uint16Volume {
 	timing.StartTiming("Rasterize.CanonicalizeColors")
 	// Canonicalize colors
 	canonicalZero := uint16(shift + ds.Find(0))
-	for k, cube := range vol.cubes {
+	for k, cube := range vol.Cubes {
 		if cube == nil {
-			vol.colors[k] = uint16(shift + ds.Find(int(vol.colors[k])-shift))
-			if vol.colors[k] == canonicalZero {
-				vol.colors[k] = 0
+			vol.Colors[k] = uint16(shift + ds.Find(int(vol.Colors[k])-shift))
+			if vol.Colors[k] == canonicalZero {
+				vol.Colors[k] = 0
 			}
 			continue
 		}

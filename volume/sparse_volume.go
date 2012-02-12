@@ -12,18 +12,18 @@ const (
 
 type SparseVolume struct {
 	n      int
-	lk     int
-	cubes  [][]uint16
-	colors []uint16
+	LK     int
+	Cubes  [][]uint16
+	Colors []uint16
 }
 
 func NewSparseVolume(n int) (v *SparseVolume) {
 	lk := int(log2(int64(n)) - lh)
 	return &SparseVolume{
 		n:      n,
-		lk:     lk,
-		cubes:  make([][]uint16, 1<<uint(3*lk)),
-		colors: make([]uint16, 1<<uint(3*lk)),
+		LK:     lk,
+		Cubes:  make([][]uint16, 1<<uint(3*lk)),
+		Colors: make([]uint16, 1<<uint(3*lk)),
 	}
 }
 
@@ -37,10 +37,10 @@ func (v *SparseVolume) GetV(x, y, z int) uint16 {
 	}
 	p := Point16{uint16(x), uint16(y), uint16(z)}
 	k := point2k(p)
-	if v.cubes[k] == nil {
-		return v.colors[k]
+	if v.Cubes[k] == nil {
+		return v.Colors[k]
 	}
-	return v.cubes[k][point2h(p)]
+	return v.Cubes[k][point2h(p)]
 }
 
 func (v *SparseVolume) XLen() int {
@@ -61,25 +61,25 @@ func (v *SparseVolume) Set(x, y, z int, val uint16) {
 	}
 	p := Point16{uint16(x), uint16(y), uint16(z)}
 	k := point2k(p)
-	if v.cubes[k] == nil {
-		if v.colors[k] == val {
+	if v.Cubes[k] == nil {
+		if v.Colors[k] == val {
 			return
 		}
-		old := v.colors[k]
-		v.colors[k] = 0
-		v.cubes[k] = make([]uint16, 1<<(3*lh))
-		for i := range v.cubes[k] {
-			v.cubes[k][i] = old
+		old := v.Colors[k]
+		v.Colors[k] = 0
+		v.Cubes[k] = make([]uint16, 1<<(3*lh))
+		for i := range v.Cubes[k] {
+			v.Cubes[k][i] = old
 		}
 	}
-	v.cubes[k][point2h(p)] = val
+	v.Cubes[k][point2h(p)] = val
 }
 
 func (v *SparseVolume) SetAllFilled(threshold, val uint16) {
-	for k, cube := range v.cubes {
+	for k, cube := range v.Cubes {
 		if cube == nil {
-			if v.colors[k] >= threshold {
-				v.colors[k] = val
+			if v.Colors[k] >= threshold {
+				v.Colors[k] = val
 			}
 			continue
 		}
@@ -92,14 +92,14 @@ func (v *SparseVolume) SetAllFilled(threshold, val uint16) {
 }
 
 func (v *SparseVolume) MapBoundary(f func(x, y, z int)) {
-	for k, cube := range v.cubes {
+	for k, cube := range v.Cubes {
 		if cube == nil {
 			// Skip empty cubes
-			if v.colors[k] == 0 {
+			if v.Colors[k] == 0 {
 				continue
 			}
 			p := k2point(k)
-			side := 1 << uint(v.lk)
+			side := 1 << uint(v.LK)
 			for x := 0; x < side; x++ {
 				var p2 Point16
 				p2[0] = p[0] + uint16(x)
@@ -191,13 +191,13 @@ func (v *SparseVolume) MapBoundary(f func(x, y, z int)) {
 }
 
 func (v *SparseVolume) Volume() (res int64) {
-	for k, cube := range v.cubes {
+	for k, cube := range v.Cubes {
 		if cube == nil {
 			// Skip empty cubes
-			if v.colors[k] == 0 {
+			if v.Colors[k] == 0 {
 				continue
 			}
-			side := int64(1 << uint(v.lk))
+			side := int64(1 << uint(v.LK))
 			res += side * side * side
 			continue
 		}
@@ -226,19 +226,19 @@ func point2k(p Point16) int {
 	return (spread3(byte(p[0]>>lh)) << 2) + (spread3(byte(p[1]>>lh)) << 1) + spread3(byte(p[2]>>lh))
 }
 
-func k2cube(k int) (p Point16) {
+func K2cube(k int) (p Point16) {
 	p[0] = uint16(join3((k >> 2) & 0x249249))
 	p[1] = uint16(join3((k >> 1) & 0x249249))
 	p[2] = uint16(join3(k & 0x249249))
 	return
 }
 
-func cube2k(p Point16) int {
+func Cube2k(p Point16) int {
 	return (spread3(byte(p[0])) << 2) + (spread3(byte(p[1])) << 1) + spread3(byte(p[2]))
 }
 
 func k2point(k int) (p Point16) {
-	p = k2cube(k)
+	p = K2cube(k)
 	p[0] = p[0] << lh
 	p[1] = p[1] << lh
 	p[2] = p[2] << lh
@@ -292,6 +292,6 @@ func kh2key(k, h int) uint64 {
 	return (uint64(k) << (3 * lh)) | uint64(h)
 }
 
-func kh2point(k, h int) Point16 {
+func Kh2point(k, h int) Point16 {
 	return key2point(kh2key(k, h))
 }
