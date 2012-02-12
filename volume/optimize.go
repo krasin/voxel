@@ -433,7 +433,7 @@ func Rasterize(m Mesh, n int) Uint16Volume {
 func main() {
 	timing.StartTiming("total")
 	timing.StartTiming("Read STL from Stdin")
-	triangles, err := ReadSTL(os.Stdin)
+	triangles, err := stl.ReadSTL(os.Stdin)
 	if err != nil {
 		log.Fatalf("ReadSTL: %v", err)
 	}
