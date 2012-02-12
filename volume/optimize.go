@@ -253,7 +253,7 @@ func STLToMesh(n int, triangles []stl.STLTriangle) (m Mesh) {
 	for _, t := range triangles {
 		for i := 0; i < 3; i++ {
 			for j := 0; j < 3; j++ {
-				cur := t.v[i][j]
+				cur := t.V[i][j]
 				if min[j] > cur {
 					min[j] = cur
 				}
@@ -271,7 +271,7 @@ func STLToMesh(n int, triangles []stl.STLTriangle) (m Mesh) {
 		cur := &m.Triangle[i]
 		for i := 0; i < 3; i++ {
 			for j := 0; j < 3; j++ {
-				val := float64(t.v[i][j])
+				val := float64(t.V[i][j])
 				cur[i][j] = int64((val - m.P0[j]) * float64(m.N[j]) / (m.P1[j] - m.P0[j]))
 			}
 		}
