@@ -11,6 +11,7 @@ import (
 	"os"
 
 	"github.com/krasin/stl"
+	"github.com/krasin/voxel/nptl"
 	"github.com/krasin/voxel/set"
 	"github.com/krasin/voxel/timing"
 	"github.com/krasin/voxel/triangle"
@@ -58,85 +59,6 @@ func PinkX(n int) color.RGBA {
 		return color.RGBA{Pink.R, Pink.G + uint8(n), Pink.B, 255}
 	}
 	return Pink
-}
-
-func Normal(vol volume.BoolVoxelVolume, x, y, z int) (nx, ny, nz float64) {
-	var px, py, pz int
-	if vol.Get(x-1, y, z) {
-		px++
-	}
-	if vol.Get(x+1, y, z) {
-		px--
-	}
-	if vol.Get(x, y-1, z) {
-		py++
-	}
-	if vol.Get(x, y+1, z) {
-		py--
-	}
-	if vol.Get(x, y, z-1) {
-		pz++
-	}
-	if vol.Get(x, y, z+1) {
-		pz--
-	}
-	if vol.Get(x-1, y-1, z) {
-		px++
-		py++
-	}
-	if vol.Get(x+1, y-1, z) {
-		px--
-		py++
-	}
-	if vol.Get(x-1, y+1, z) {
-		px++
-		py--
-	}
-	if vol.Get(x+1, y+1, z) {
-		px--
-		py--
-	}
-	if vol.Get(x, y-1, z-1) {
-		py++
-		pz++
-	}
-	if vol.Get(x, y+1, z-1) {
-		py--
-		pz++
-	}
-	if vol.Get(x, y-1, z+1) {
-		py++
-		pz--
-	}
-	if vol.Get(x, y+1, z+1) {
-		py--
-		pz--
-	}
-	if vol.Get(x-1, y, z-1) {
-		px++
-		pz++
-	}
-	if vol.Get(x+1, y, z-1) {
-		px--
-		pz++
-	}
-	if vol.Get(x-1, y, z+1) {
-		px++
-		pz--
-	}
-	if vol.Get(x+1, y, z+1) {
-		px--
-		pz--
-	}
-	r2 := px*px + py*py + pz*pz
-	if r2 == 0 {
-		return 1, 0, 0
-	}
-	l := math.Sqrt(float64(r2))
-	nx = float64(px) / l
-	ny = float64(py) / l
-	nz = float64(pz) / l
-	return
 }
 
 type Uint16Volume interface {
@@ -195,26 +117,6 @@ func Optimize(vol Uint16Volume, n int) {
 	}
 	vol.SetAllFilled(uint16(n+1), 0)
 
-	return
-}
-
-func WriteNptl(vol Uint16Volume, grid Grid, output io.Writer) (err error) {
-	stepX := (grid.P1[0] - grid.P0[0]) / float64(vol.XLen())
-	stepY := (grid.P1[1] - grid.P0[1]) / float64(vol.YLen())
-	stepZ := (grid.P1[2] - grid.P0[2]) / float64(vol.ZLen())
-
-	vol.MapBoundary(func(x, y, z int) {
-		nx, ny, nz := Normal(vol, x, y, z)
-		if _, err = fmt.Fprintf(output, "%f %f %f %f %f %f\n",
-			grid.P0[0]+float64(x)*stepX,
-			grid.P0[1]+float64(y)*stepY,
-			grid.P0[2]+float64(z)*stepZ,
-			nx, ny, nz); err != nil {
-			return
-		}
-	})
-	v := vol.Volume()
-	fmt.Fprintf(os.Stderr, "Volume is filled by %v%%\n", float64(v)*float64(100)/(float64(vol.XLen())*float64(vol.YLen())*float64(vol.ZLen())))
 	return
 }
 
@@ -447,7 +349,10 @@ func main() {
 	if err = WriteNptl(vol, mesh.Grid, os.Stdout); err != nil {
 		log.Fatalf("WriteNptl: %v", err)
 	}
+	v := vol.Volume()
+	fmt.Fprintf(os.Stderr, "Volume is filled by %v%%\n", float64(v)*float64(100)/(float64(vol.XLen())*float64(vol.YLen())*float64(vol.ZLen())))
 	timing.StopTiming("WriteNptl")
+
 	timing.StopTiming("total")
 	timing.PrintTimings(os.Stderr)
 }
