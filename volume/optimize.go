@@ -445,7 +445,7 @@ func main() {
 	timing.StopTiming("STLToMesh")
 
 	timing.StartTiming("MeshVolume")
-	volume := MeshVolume(mesh.Triangle, 1)
+	volume := triangle.MeshVolume(mesh.Triangle, 1)
 	if volume < 0 {
 		volume = -volume
 	}
