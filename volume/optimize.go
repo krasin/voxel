@@ -11,6 +11,7 @@ import (
 	"os"
 
 	"github.com/krasin/stl"
+	"github.com/krasin/voxel/triangle"
 )
 
 const (
@@ -241,7 +242,7 @@ type Grid struct {
 
 type Mesh struct {
 	Grid
-	Triangle []Triangle
+	Triangle []triangle.Triangle
 }
 
 func STLToMesh(n int, triangles []stl.STLTriangle) (m Mesh) {
@@ -263,7 +264,7 @@ func STLToMesh(n int, triangles []stl.STLTriangle) (m Mesh) {
 	m.P0 = [3]float64{float64(min[0]) - 1, float64(min[1]) - 1, float64(min[2]) - 1}
 	m.P1 = [3]float64{float64(max[0]) + 1, float64(max[1]) + 1, float64(max[2]) + 1}
 	m.N = [3]int64{int64(n), int64(n), int64(n)}
-	m.Triangle = make([]Triangle, len(triangles))
+	m.Triangle = make([]triangle.Triangle, len(triangles))
 	for i, t := range triangles {
 		cur := &m.Triangle[i]
 		for i := 0; i < 3; i++ {
@@ -290,7 +291,7 @@ func Rasterize(m Mesh, n int) Uint16Volume {
 
 	StartTiming("Rasterize triangles")
 	for index, t := range m.Triangle {
-		AllTriangleDots(t[0], t[1], t[2], scale, vol, uint16(1+(index%10)))
+		triangle.AllTriangleDots(t[0], t[1], t[2], scale, vol, uint16(1+(index%10)))
 	}
 	fmt.Fprintf(os.Stderr, "Triangle rasterization complete\n")
 	StopTiming("Rasterize triangles")
