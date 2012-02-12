@@ -1,4 +1,4 @@
-package main
+package set
 
 // DisjoinSet tracks and merges clusters.
 // It might be useful for finding graph components and
