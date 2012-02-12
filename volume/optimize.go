@@ -1,4 +1,4 @@
-package main
+package volume
 
 import (
 	"fmt"
@@ -9,12 +9,13 @@ import (
 	"log"
 	"math"
 	"os"
+
+	"github.com/krasin/stl"
 )
 
 const (
-	SizeOfSTLTriangle = 4*3*4 + 2
-	VoxelSide         = 512
-	MeshMultiplier    = 2048
+	VoxelSide      = 512
+	MeshMultiplier = 2048
 )
 
 var (
@@ -243,7 +244,7 @@ type Mesh struct {
 	Triangle []Triangle
 }
 
-func STLToMesh(n int, triangles []STLTriangle) (m Mesh) {
+func STLToMesh(n int, triangles []stl.STLTriangle) (m Mesh) {
 	min := []float32{math.MaxFloat32, math.MaxFloat32, math.MaxFloat32}
 	max := []float32{-math.MaxFloat32, -math.MaxFloat32, -math.MaxFloat32}
 	for _, t := range triangles {

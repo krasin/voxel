@@ -1,4 +1,4 @@
-package main
+package volume
 
 type Point16 [3]uint16
 
