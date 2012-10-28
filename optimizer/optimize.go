@@ -124,13 +124,13 @@ func main() {
 	Optimize(vol, 22)
 	timing.StopTiming("Optimize")
 
-	timing.StartTiming("WriteNptl")
-	if err = nptl.WriteNptl(vol, mesh.Grid, os.Stdout); err != nil {
-		log.Fatalf("WriteNptl: %v", err)
+	timing.StartTiming("Write nptl")
+	if err = nptl.Write(os.Stdout, vol, mesh.Grid); err != nil {
+		log.Fatalf("nptl.Write: %v", err)
 	}
 	v := vol.Volume()
 	fmt.Fprintf(os.Stderr, "Volume is filled by %v%%\n", float64(v)*float64(100)/(float64(vol.XLen())*float64(vol.YLen())*float64(vol.ZLen())))
-	timing.StopTiming("WriteNptl")
+	timing.StopTiming("Write nptl")
 
 	timing.StopTiming("total")
 	timing.PrintTimings(os.Stderr)
