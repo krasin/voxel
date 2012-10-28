@@ -97,9 +97,9 @@ type Location16 [2]int16
 func main() {
 	timing.StartTiming("total")
 	timing.StartTiming("Read STL from Stdin")
-	triangles, err := stl.ReadSTL(os.Stdin)
+	triangles, err := stl.Read(os.Stdin)
 	if err != nil {
-		log.Fatalf("ReadSTL: %v", err)
+		log.Fatalf("stl.Read: %v", err)
 	}
 	timing.StopTiming("Read STL from Stdin")
 

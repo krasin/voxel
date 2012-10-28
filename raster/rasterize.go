@@ -65,7 +65,7 @@ type Mesh struct {
 	Triangle []triangle.Triangle
 }
 
-func STLToMesh(n int, triangles []stl.STLTriangle) (m Mesh) {
+func STLToMesh(n int, triangles []stl.Triangle) (m Mesh) {
 	min := []float32{math.MaxFloat32, math.MaxFloat32, math.MaxFloat32}
 	max := []float32{-math.MaxFloat32, -math.MaxFloat32, -math.MaxFloat32}
 	for _, t := range triangles {
