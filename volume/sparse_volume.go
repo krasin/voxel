@@ -10,6 +10,7 @@ const (
 	mask3lh = (1 << (3 * lh)) - 1
 )
 
+// SparseVolume represents a voxel cube.
 type SparseVolume struct {
 	n      int
 	LK     int
@@ -17,6 +18,7 @@ type SparseVolume struct {
 	Colors []uint16
 }
 
+// NewSparseVolume create a voxel cube with side n.
 func NewSparseVolume(n int) (v *SparseVolume) {
 	lk := int(log2(int64(n)) - lh)
 	return &SparseVolume{
@@ -27,10 +29,12 @@ func NewSparseVolume(n int) (v *SparseVolume) {
 	}
 }
 
+// Get returns true, if the voxel is filled (color != 0).
 func (v *SparseVolume) Get(x, y, z int) bool {
 	return v.GetV(x, y, z) != 0
 }
 
+// GetV returns the color of the voxel (empty voxel has color == 0).
 func (v *SparseVolume) GetV(x, y, z int) uint16 {
 	if x < 0 || y < 0 || z < 0 || x >= v.n || y >= v.n || z >= v.n {
 		return 0
@@ -55,6 +59,7 @@ func (v *SparseVolume) ZLen() int {
 	return v.n
 }
 
+// Set sets the color of the voxel.
 func (v *SparseVolume) Set(x, y, z int, val uint16) {
 	if x < 0 || y < 0 || z < 0 || x >= v.n || y >= v.n || z >= v.n {
 		return
@@ -75,6 +80,7 @@ func (v *SparseVolume) Set(x, y, z int, val uint16) {
 	v.Cubes[k][point2h(p)] = val
 }
 
+// SetAllFilled sets the specified color to all voxels with color >= threshold.
 func (v *SparseVolume) SetAllFilled(threshold, val uint16) {
 	for k, cube := range v.Cubes {
 		if cube == nil {
@@ -91,6 +97,7 @@ func (v *SparseVolume) SetAllFilled(threshold, val uint16) {
 	}
 }
 
+// MapBoundary invokes a provided function on every border voxel.
 func (v *SparseVolume) MapBoundary(f func(x, y, z int)) {
 	for k, cube := range v.Cubes {
 		if cube == nil {
