@@ -1,4 +1,4 @@
-[![](http://goci.me/project/image/github.com/krasin/voxel)](http://goci.me/project/github.com/krasin/voxel)
+[![Build Status](https://goci.herokuapp.com/project/image/github.com/krasin/voxel "Continous integration")](https://goci.me/project/github.com/krasin/voxel)
 
 Go libraries/utils for voxel processing.
 
