@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-ztype Timing struct {
+type Timing struct {
 	Name  string
 	Start time.Time
 	End   time.Time
