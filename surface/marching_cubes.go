@@ -1,7 +1,11 @@
-package surface
+package main
 
 import (
+	"log"
 	"math"
+	"os"
+
+	"github.com/krasin/stl"
 )
 
 // This file contains an implementation of Marching Cubes algorithms
@@ -386,12 +390,16 @@ type vector struct {
 
 var (
 	vMarchCube   = vMarchCube1
-	fSample      = fSample1
-	iDataSetSize = 16
+	fSample      = fSample2
+	iDataSetSize = 32
 	fStepSize    = 1.0 / float64(iDataSetSize)
 	fTargetValue = 48.0
 	fTime        = 0.0
-	sSourcePoint [3]vector
+	sSourcePoint = [3]vector{
+		{0.35, 0.35, 0.35},
+		{0.35, 0.65, 0.35},
+		{0.65, 0.35, 0.65},
+	}
 )
 
 //fGetOffset finds the approximate point of intersection of the surface
@@ -522,14 +530,21 @@ func vMarchCube1(fX, fY, fZ, fScale float64) {
 			break
 		}
 
+		var tt stl.Triangle
 		for iCorner = 0; iCorner < 3; iCorner++ {
 			iVertex = a2iTriangleConnectionTable[iFlagIndex][3*iTriangle+iCorner]
+
+			// This is actually being assigned 3 times to possibly different values.
+			// Find out what to do with this.
+			tt.N = stl.Point{float32(asEdgeNorm[iVertex].fX), float32(asEdgeNorm[iVertex].fY), float32(asEdgeNorm[iVertex].fZ)}
+			tt.V[iCorner] = stl.Point{float32(asEdgeVertex[iVertex].fX), float32(asEdgeVertex[iVertex].fY), float32(asEdgeVertex[iVertex].fZ)}
 
 			//sColor = vGetColor(asEdgeVertex[iVertex], asEdgeNorm[iVertex])
 			//                        glColor3f(sColor.fX, sColor.fY, sColor.fZ);
 			//                        glNormal3f(asEdgeNorm[iVertex].fX,   asEdgeNorm[iVertex].fY,   asEdgeNorm[iVertex].fZ);
 			//                        glVertex3f(asEdgeVertex[iVertex].fX, asEdgeVertex[iVertex].fY, asEdgeVertex[iVertex].fZ);
 		}
+		t = append(t, tt)
 	}
 }
 
@@ -553,4 +568,37 @@ func fSample1(fX, fY, fZ float64) float64 {
 	fResult += 1.5 / (fDx*fDx + fDy*fDy + fDz*fDz)
 
 	return fResult
+}
+
+//fSample2 finds the distance of (fX, fY, fZ) from three moving lines
+func fSample2(fX, fY, fZ float64) float64 {
+	if math.Abs(fX) < 0.1 || math.Abs(fY) < 0.1 || math.Abs(fZ) < 0.1 ||
+		math.Abs(fX) > 0.9 || math.Abs(fY) > 0.9 || math.Abs(fZ) > 0.9 {
+		return 0
+	}
+	fResult := 0.0
+	fDx := fX - sSourcePoint[0].fX
+	fDy := fY - sSourcePoint[0].fY
+	fResult += 0.5 / (fDx*fDx + fDy*fDy)
+
+	fDx = fX - sSourcePoint[1].fX
+	fDz := fZ - sSourcePoint[1].fZ
+	fResult += 0.75 / (fDx*fDx + fDz*fDz)
+
+	fDy = fY - sSourcePoint[2].fY
+	fDz = fZ - sSourcePoint[2].fZ
+	fResult += 1.0 / (fDy*fDy + fDz*fDz)
+
+	return fResult
+}
+
+var t []stl.Triangle
+
+func main() {
+	log.Printf("Starting marshing cubes...\n")
+	vMarchingCubes()
+	log.Printf("Done! %d triangles\n", len(t))
+	if err := stl.Write(os.Stdout, t); err != nil {
+		log.Fatalf("stl.Write: %v", err)
+	}
 }
