@@ -60,6 +60,18 @@ type Grid struct {
 	N  [3]int64
 }
 
+func (g Grid) Coord(pos [3]int) [3]float64 {
+	d0 := (g.P1[0] - g.P0[0]) / float64(g.N[0])
+	d1 := (g.P1[1] - g.P0[1]) / float64(g.N[1])
+	d2 := (g.P1[2] - g.P0[2]) / float64(g.N[2])
+
+	return [3]float64{
+		g.P0[0] + d0*float64(pos[0]),
+		g.P0[1] + d1*float64(pos[1]),
+		g.P0[2] + d2*float64(pos[2]),
+	}
+}
+
 type Mesh struct {
 	Grid
 	Triangle []triangle.Triangle
