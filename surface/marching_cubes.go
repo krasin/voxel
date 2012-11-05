@@ -391,7 +391,7 @@ type vector struct {
 var (
 	vMarchCube   = vMarchCube1
 	fSample      = fSample2
-	iDataSetSize = 32
+	iDataSetSize = 64
 	fStepSize    = 1.0 / float64(iDataSetSize)
 	fTargetValue = 48.0
 	fTime        = 0.0
