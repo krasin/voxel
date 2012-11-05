@@ -9,6 +9,7 @@ import (
 	"github.com/krasin/stl"
 	"github.com/krasin/voxel/nptl"
 	"github.com/krasin/voxel/raster"
+	"github.com/krasin/voxel/surface"
 	"github.com/krasin/voxel/timing"
 	"github.com/krasin/voxel/triangle"
 	"github.com/krasin/voxel/volume"
@@ -131,6 +132,16 @@ func main() {
 	v := vol.Volume()
 	fmt.Fprintf(os.Stderr, "Volume is filled by %v%%\n", float64(v)*float64(100)/(float64(vol.XLen())*float64(vol.YLen())*float64(vol.ZLen())))
 	timing.StopTiming("Write nptl")
+
+	t := surface.MarchingCubes(vol, mesh.Grid)
+	var f *os.File
+	if f, err = os.OpenFile("output.stl", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644); err != nil {
+		log.Fatal(err)
+	}
+	if err = stl.Write(f, t); err != nil {
+		log.Fatalf("stl.Write: %v", err)
+	}
+	f.Close()
 
 	timing.StopTiming("total")
 	timing.PrintTimings(os.Stderr)
