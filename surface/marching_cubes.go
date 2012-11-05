@@ -1,5 +1,9 @@
 package surface
 
+import (
+	"math"
+)
+
 // This file contains an implementation of Marching Cubes algorithms
 // based on the information given at
 // http://paulbourke.net/geometry/polygonise/
@@ -10,6 +14,46 @@ package surface
 // For any tetrahedron the are 2^4=16 possible sets of vertex states
 // This table lists the edges intersected by the surface for all 16 possible vertex states
 // There are 6 edges.  For each entry in the table, if edge #n is intersected, then bit #n is set to 1
+
+//These tables are used so that everything can be done in little loops that you can look at all at once
+// rather than in pages and pages of unrolled code.
+
+//a2fVertexOffset lists the positions, relative to vertex0, of each of the 8 vertices of a cube
+var a2fVertexOffset = [8][3]float64{
+	{0.0, 0.0, 0.0}, {1.0, 0.0, 0.0}, {1.0, 1.0, 0.0}, {0.0, 1.0, 0.0},
+	{0.0, 0.0, 1.0}, {1.0, 0.0, 1.0}, {1.0, 1.0, 1.0}, {0.0, 1.0, 1.0},
+}
+
+//a2iEdgeConnection lists the index of the endpoint vertices for each of the 12 edges of the cube
+var a2iEdgeConnection = [12][2]int{
+	{0, 1}, {1, 2}, {2, 3}, {3, 0},
+	{4, 5}, {5, 6}, {6, 7}, {7, 4},
+	{0, 4}, {1, 5}, {2, 6}, {3, 7},
+}
+
+//a2fEdgeDirection lists the direction vector (vertex1-vertex0) for each edge in the cube
+var a2fEdgeDirection = [12][3]float64{
+	{1.0, 0.0, 0.0}, {0.0, 1.0, 0.0}, {-1.0, 0.0, 0.0}, {0.0, -1.0, 0.0},
+	{1.0, 0.0, 0.0}, {0.0, 1.0, 0.0}, {-1.0, 0.0, 0.0}, {0.0, -1.0, 0.0},
+	{0.0, 0.0, 1.0}, {0.0, 0.0, 1.0}, {0.0, 0.0, 1.0}, {0.0, 0.0, 1.0},
+}
+
+//a2iTetrahedronEdgeConnection lists the index of the endpoint vertices for each of the 6 edges of the tetrahedron
+var a2iTetrahedronEdgeConnection = [6][2]int{
+
+	{0, 1}, {1, 2}, {2, 0}, {0, 3}, {1, 3}, {2, 3},
+}
+
+//a2iTetrahedronEdgeConnection lists the index of verticies from a cube 
+// that made up each of the six tetrahedrons within the cube
+var a2iTetrahedronsInACube = [6][4]int{
+	{0, 5, 1, 6},
+	{0, 1, 2, 6},
+	{0, 2, 3, 6},
+	{0, 3, 7, 6},
+	{0, 7, 4, 6},
+	{0, 4, 5, 6},
+}
 
 var aiTetrahedronEdgeFlags = [16]int{
 	0x00, 0x0d, 0x13, 0x1e, 0x26, 0x2b, 0x35, 0x38, 0x38, 0x35, 0x2b, 0x26, 0x1e, 0x13, 0x0d, 0x00,
@@ -334,4 +378,179 @@ var a2iTriangleConnectionTable = [256][16]int{
 	{0, 9, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
 	{0, 3, 8, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
 	{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+}
+
+type vector struct {
+	fX, fY, fZ float64
+}
+
+var (
+	vMarchCube   = vMarchCube1
+	fSample      = fSample1
+	iDataSetSize = 16
+	fStepSize    = 1.0 / float64(iDataSetSize)
+	fTargetValue = 48.0
+	fTime        = 0.0
+	sSourcePoint [3]vector
+)
+
+//fGetOffset finds the approximate point of intersection of the surface
+// between two points with the values fValue1 and fValue2
+func fGetOffset(fValue1, fValue2, fValueDesired float64) float64 {
+	fDelta := fValue2 - fValue1
+
+	if fDelta == 0.0 {
+		return 0.5
+	}
+
+	return (fValueDesired - fValue1) / fDelta
+}
+
+func zeroPlus(x float64) float64 {
+	if x >= 0 {
+		return x
+	}
+	return 0
+}
+
+//vGetColor generates a color from a given position and normal of a point
+func vGetColor(rfPosition, rfNormal vector) (rfColor vector) {
+	fX := rfNormal.fX
+	fY := rfNormal.fY
+	fZ := rfNormal.fZ
+	rfColor.fX = zeroPlus(fX) + zeroPlus(-0.5*fY) + zeroPlus(-0.5*fZ)
+	//        rfColor.fX = (fX > 0.0 ? fX : 0.0) + (fY < 0.0 ? -0.5*fY : 0.0) + (fZ < 0.0 ? -0.5*fZ : 0.0);
+	rfColor.fY = zeroPlus(fY) + zeroPlus(-0.5*fZ) + zeroPlus(-0.5*fX)
+	//        rfColor.fY = (fY > 0.0 ? fY : 0.0) + (fZ < 0.0 ? -0.5*fZ : 0.0) + (fX < 0.0 ? -0.5*fX : 0.0);
+	rfColor.fZ = zeroPlus(fZ) + zeroPlus(-0.5*fX) + zeroPlus(-0.5*fY)
+	//        rfColor.fZ = (fZ > 0.0 ? fZ : 0.0) + (fX < 0.0 ? -0.5*fX : 0.0) + (fY < 0.0 ? -0.5*fY : 0.0);
+	return
+}
+
+func vNormalizeVector(rfVectorSource vector) (rfVectorResult vector) {
+	fOldLength := math.Sqrt((rfVectorSource.fX * rfVectorSource.fX) +
+		(rfVectorSource.fY * rfVectorSource.fY) +
+		(rfVectorSource.fZ * rfVectorSource.fZ))
+
+	if fOldLength == 0.0 {
+		rfVectorResult.fX = rfVectorSource.fX
+		rfVectorResult.fY = rfVectorSource.fY
+		rfVectorResult.fZ = rfVectorSource.fZ
+	} else {
+		fScale := 1.0 / fOldLength
+		rfVectorResult.fX = rfVectorSource.fX * fScale
+		rfVectorResult.fY = rfVectorSource.fY * fScale
+		rfVectorResult.fZ = rfVectorSource.fZ * fScale
+	}
+	return
+}
+
+//vGetNormal() finds the gradient of the scalar field at a point
+//This gradient can be used as a very accurate vertx normal for lighting calculations
+func vGetNormal(fX, fY, fZ float64) (rfNormal vector) {
+	rfNormal.fX = fSample(fX-0.01, fY, fZ) - fSample(fX+0.01, fY, fZ)
+	rfNormal.fY = fSample(fX, fY-0.01, fZ) - fSample(fX, fY+0.01, fZ)
+	rfNormal.fZ = fSample(fX, fY, fZ-0.01) - fSample(fX, fY, fZ+0.01)
+	rfNormal = vNormalizeVector(rfNormal)
+	return
+}
+
+//vMarchingCubes iterates over the entire dataset, calling vMarchCube on each cube
+func vMarchingCubes() {
+	for iX := 0; iX < iDataSetSize; iX++ {
+		for iY := 0; iY < iDataSetSize; iY++ {
+			for iZ := 0; iZ < iDataSetSize; iZ++ {
+				vMarchCube(float64(iX)*fStepSize, float64(iY)*fStepSize, float64(iZ)*fStepSize, fStepSize)
+			}
+		}
+	}
+}
+
+//vMarchCube1 performs the Marching Cubes algorithm on a single cube
+func vMarchCube1(fX, fY, fZ, fScale float64) {
+	var iCorner, iVertex, iVertexTest, iEdge, iTriangle, iFlagIndex, iEdgeFlags int
+	var fOffset float64
+	var afCubeValue [8]float64
+	var asEdgeVertex [12]vector
+	var asEdgeNorm [12]vector
+
+	//Make a local copy of the values at the cube's corners
+	for iVertex = 0; iVertex < 8; iVertex++ {
+
+		afCubeValue[iVertex] = fSample(fX+a2fVertexOffset[iVertex][0]*fScale,
+			fY+a2fVertexOffset[iVertex][1]*fScale,
+			fZ+a2fVertexOffset[iVertex][2]*fScale)
+	}
+
+	//Find which vertices are inside of the surface and which are outside
+	iFlagIndex = 0
+	for iVertexTest = 0; iVertexTest < 8; iVertexTest++ {
+		if afCubeValue[iVertexTest] <= fTargetValue {
+			iFlagIndex |= 1 << uint(iVertexTest)
+		}
+	}
+
+	//Find which edges are intersected by the surface
+	iEdgeFlags = aiCubeEdgeFlags[iFlagIndex]
+
+	//If the cube is entirely inside or outside of the surface, then there will be no intersections
+	if iEdgeFlags == 0 {
+
+		return
+	}
+
+	//Find the point of intersection of the surface with each edge
+	//Then find the normal to the surface at those points
+	for iEdge = 0; iEdge < 12; iEdge++ {
+
+		//if there is an intersection on this edge
+		if iEdgeFlags&(1<<uint(iEdge)) != 0 {
+			fOffset = fGetOffset(afCubeValue[a2iEdgeConnection[iEdge][0]],
+				afCubeValue[a2iEdgeConnection[iEdge][1]], fTargetValue)
+
+			asEdgeVertex[iEdge].fX = fX + (a2fVertexOffset[a2iEdgeConnection[iEdge][0]][0]+fOffset*a2fEdgeDirection[iEdge][0])*fScale
+			asEdgeVertex[iEdge].fY = fY + (a2fVertexOffset[a2iEdgeConnection[iEdge][0]][1]+fOffset*a2fEdgeDirection[iEdge][1])*fScale
+			asEdgeVertex[iEdge].fZ = fZ + (a2fVertexOffset[a2iEdgeConnection[iEdge][0]][2]+fOffset*a2fEdgeDirection[iEdge][2])*fScale
+
+			asEdgeNorm[iEdge] = vGetNormal(asEdgeVertex[iEdge].fX, asEdgeVertex[iEdge].fY, asEdgeVertex[iEdge].fZ)
+		}
+	}
+
+	//Draw the triangles that were found.  There can be up to five per cube
+	for iTriangle = 0; iTriangle < 5; iTriangle++ {
+		if a2iTriangleConnectionTable[iFlagIndex][3*iTriangle] < 0 {
+			break
+		}
+
+		for iCorner = 0; iCorner < 3; iCorner++ {
+			iVertex = a2iTriangleConnectionTable[iFlagIndex][3*iTriangle+iCorner]
+
+			//sColor = vGetColor(asEdgeVertex[iVertex], asEdgeNorm[iVertex])
+			//                        glColor3f(sColor.fX, sColor.fY, sColor.fZ);
+			//                        glNormal3f(asEdgeNorm[iVertex].fX,   asEdgeNorm[iVertex].fY,   asEdgeNorm[iVertex].fZ);
+			//                        glVertex3f(asEdgeVertex[iVertex].fX, asEdgeVertex[iVertex].fY, asEdgeVertex[iVertex].fZ);
+		}
+	}
+}
+
+//fSample1 finds the distance of (fX, fY, fZ) from three moving points
+func fSample1(fX, fY, fZ float64) float64 {
+	var fResult float64
+	var fDx, fDy, fDz float64
+	fDx = fX - sSourcePoint[0].fX
+	fDy = fY - sSourcePoint[0].fY
+	fDz = fZ - sSourcePoint[0].fZ
+	fResult += 0.5 / (fDx*fDx + fDy*fDy + fDz*fDz)
+
+	fDx = fX - sSourcePoint[1].fX
+	fDy = fY - sSourcePoint[1].fY
+	fDz = fZ - sSourcePoint[1].fZ
+	fResult += 1.0 / (fDx*fDx + fDy*fDy + fDz*fDz)
+
+	fDx = fX - sSourcePoint[2].fX
+	fDy = fY - sSourcePoint[2].fY
+	fDz = fZ - sSourcePoint[2].fZ
+	fResult += 1.5 / (fDx*fDx + fDy*fDy + fDz*fDz)
+
+	return fResult
 }
