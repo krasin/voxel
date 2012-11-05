@@ -464,18 +464,20 @@ func vGetNormal(fX, fY, fZ float64) (rfNormal vector) {
 }
 
 //vMarchingCubes iterates over the entire dataset, calling vMarchCube on each cube
-func vMarchingCubes() {
+func vMarchingCubes() []stl.Triangle {
+	var t []stl.Triangle
 	for iX := 0; iX < iDataSetSize; iX++ {
 		for iY := 0; iY < iDataSetSize; iY++ {
 			for iZ := 0; iZ < iDataSetSize; iZ++ {
-				vMarchCube(float64(iX)*fStepSize, float64(iY)*fStepSize, float64(iZ)*fStepSize, fStepSize)
+				t = vMarchCube(t, float64(iX)*fStepSize, float64(iY)*fStepSize, float64(iZ)*fStepSize, fStepSize)
 			}
 		}
 	}
+	return t
 }
 
 //vMarchCube1 performs the Marching Cubes algorithm on a single cube
-func vMarchCube1(fX, fY, fZ, fScale float64) {
+func vMarchCube1(t []stl.Triangle, fX, fY, fZ, fScale float64) []stl.Triangle {
 	var iCorner, iVertex, iVertexTest, iEdge, iTriangle, iFlagIndex, iEdgeFlags int
 	var fOffset float64
 	var afCubeValue [8]float64
@@ -503,8 +505,7 @@ func vMarchCube1(fX, fY, fZ, fScale float64) {
 
 	//If the cube is entirely inside or outside of the surface, then there will be no intersections
 	if iEdgeFlags == 0 {
-
-		return
+		return t
 	}
 
 	//Find the point of intersection of the surface with each edge
@@ -546,6 +547,7 @@ func vMarchCube1(fX, fY, fZ, fScale float64) {
 		}
 		t = append(t, tt)
 	}
+	return t
 }
 
 //fSample1 finds the distance of (fX, fY, fZ) from three moving points
@@ -592,11 +594,9 @@ func fSample2(fX, fY, fZ float64) float64 {
 	return fResult
 }
 
-var t []stl.Triangle
-
 func main() {
 	log.Printf("Starting marshing cubes...\n")
-	vMarchingCubes()
+	t := vMarchingCubes()
 	log.Printf("Done! %d triangles\n", len(t))
 	if err := stl.Write(os.Stdout, t); err != nil {
 		log.Fatalf("stl.Write: %v", err)
