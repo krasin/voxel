@@ -7,7 +7,7 @@ import (
 	"os"
 
 	"github.com/krasin/stl"
-	"github.com/krasin/voxel/nptl"
+	//	"github.com/krasin/voxel/nptl"
 	"github.com/krasin/voxel/raster"
 	"github.com/krasin/voxel/surface"
 	"github.com/krasin/voxel/timing"
@@ -125,13 +125,14 @@ func main() {
 	Optimize(vol, 22)
 	timing.StopTiming("Optimize")
 
-	timing.StartTiming("Write nptl")
-	if err = nptl.Write(os.Stdout, vol, mesh.Grid); err != nil {
-		log.Fatalf("nptl.Write: %v", err)
-	}
-	v := vol.Volume()
-	fmt.Fprintf(os.Stderr, "Volume is filled by %v%%\n", float64(v)*float64(100)/(float64(vol.XLen())*float64(vol.YLen())*float64(vol.ZLen())))
-	timing.StopTiming("Write nptl")
+	/*	timing.StartTiming("Write nptl")
+		if err = nptl.Write(os.Stdout, vol, mesh.Grid); err != nil {
+			log.Fatalf("nptl.Write: %v", err)
+		}
+		v := vol.Volume()
+		fmt.Fprintf(os.Stderr, "Volume is filled by %v%%\n", float64(v)*float64(100)/(float64(vol.XLen())*float64(vol.YLen())*float64(vol.ZLen())))
+		timing.StopTiming("Write nptl")
+	*/
 
 	t := surface.MarchingCubes(vol, mesh.Grid)
 	var f *os.File
