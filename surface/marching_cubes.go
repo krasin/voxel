@@ -389,10 +389,6 @@ type vector struct {
 	fX, fY, fZ float64
 }
 
-var (
-	fTargetValue = 48.0
-)
-
 //fGetOffset finds the approximate point of intersection of the surface
 // between two points with the values fValue1 and fValue2
 func fGetOffset(fValue1, fValue2, fValueDesired float64) float64 {
@@ -434,13 +430,18 @@ func vGetNormal(field ScalarField, fX, fY, fZ float64) (rfNormal vector) {
 }
 
 //vMarchingCubes iterates over the entire dataset, calling vMarchCube on each cube
-func MarchingCubes(field ScalarField, n int) []stl.Triangle {
+func MarchingCubes(field ScalarField, n int, threshold float64) []stl.Triangle {
 	fStepSize := 1.0 / float64(n)
 	var t []stl.Triangle
 	for iX := 0; iX < n; iX++ {
 		for iY := 0; iY < n; iY++ {
 			for iZ := 0; iZ < n; iZ++ {
-				t = marchCube(t, field, float64(iX)*fStepSize, float64(iY)*fStepSize, float64(iZ)*fStepSize, fStepSize)
+				t = marchCube(t, field,
+					threshold,
+					float64(iX)*fStepSize,
+					float64(iY)*fStepSize,
+					float64(iZ)*fStepSize,
+					fStepSize)
 			}
 		}
 	}
@@ -448,7 +449,7 @@ func MarchingCubes(field ScalarField, n int) []stl.Triangle {
 }
 
 //vMarchCube1 performs the Marching Cubes algorithm on a single cube
-func marchCube(t []stl.Triangle, field ScalarField, fX, fY, fZ, fScale float64) []stl.Triangle {
+func marchCube(t []stl.Triangle, field ScalarField, threshold, fX, fY, fZ, fScale float64) []stl.Triangle {
 	var iCorner, iVertex, iVertexTest, iEdge, iTriangle, iFlagIndex, iEdgeFlags int
 	var fOffset float64
 	var afCubeValue [8]float64
@@ -466,7 +467,7 @@ func marchCube(t []stl.Triangle, field ScalarField, fX, fY, fZ, fScale float64) 
 	//Find which vertices are inside of the surface and which are outside
 	iFlagIndex = 0
 	for iVertexTest = 0; iVertexTest < 8; iVertexTest++ {
-		if afCubeValue[iVertexTest] <= fTargetValue {
+		if afCubeValue[iVertexTest] <= threshold {
 			iFlagIndex |= 1 << uint(iVertexTest)
 		}
 	}
@@ -486,7 +487,7 @@ func marchCube(t []stl.Triangle, field ScalarField, fX, fY, fZ, fScale float64) 
 		//if there is an intersection on this edge
 		if iEdgeFlags&(1<<uint(iEdge)) != 0 {
 			fOffset = fGetOffset(afCubeValue[a2iEdgeConnection[iEdge][0]],
-				afCubeValue[a2iEdgeConnection[iEdge][1]], fTargetValue)
+				afCubeValue[a2iEdgeConnection[iEdge][1]], threshold)
 
 			asEdgeVertex[iEdge].fX = fX + (a2fVertexOffset[a2iEdgeConnection[iEdge][0]][0]+fOffset*a2fEdgeDirection[iEdge][0])*fScale
 			asEdgeVertex[iEdge].fY = fY + (a2fVertexOffset[a2iEdgeConnection[iEdge][0]][1]+fOffset*a2fEdgeDirection[iEdge][1])*fScale
