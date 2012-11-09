@@ -401,7 +401,7 @@ func fGetOffset(fValue1, fValue2, fValueDesired float64) float64 {
 	return (fValueDesired - fValue1) / fDelta
 }
 
-func vNormalizeVector(rfVectorSource Vector) (rfVectorResult Vector) {
+func normalizeVector(rfVectorSource Vector) (rfVectorResult Vector) {
 	fOldLength := math.Sqrt((rfVectorSource.X * rfVectorSource.X) +
 		(rfVectorSource.Y * rfVectorSource.Y) +
 		(rfVectorSource.Z * rfVectorSource.Z))
@@ -425,12 +425,12 @@ func vGetNormal(field ScalarField, fX, fY, fZ float64) (rfNormal Vector) {
 	rfNormal.X = field(fX-0.01, fY, fZ) - field(fX+0.01, fY, fZ)
 	rfNormal.Y = field(fX, fY-0.01, fZ) - field(fX, fY+0.01, fZ)
 	rfNormal.Z = field(fX, fY, fZ-0.01) - field(fX, fY, fZ+0.01)
-	rfNormal = vNormalizeVector(rfNormal)
+	rfNormal = normalizeVector(rfNormal)
 	return
 }
 
 //vMarchingCubes iterates over the entire dataset, calling vMarchCube on each cube
-func MarchingCubes(field ScalarField, n int, threshold float64) []stl.Triangle {
+func MarchingCubes(field ScalarField, n int, threshold float64, size Vector) []stl.Triangle {
 	step := 1.0 / float64(n)
 	var t []stl.Triangle
 	for x := 0; x < n; x++ {
@@ -439,7 +439,7 @@ func MarchingCubes(field ScalarField, n int, threshold float64) []stl.Triangle {
 			fy := float64(y) * step
 			for z := 0; z < n; z++ {
 				fz := float64(z) * step
-				t = marchCube(t, field, threshold, fx, fy, fz, step)
+				t = marchCube(t, field, threshold, fx, fy, fz, step, size)
 			}
 		}
 	}
@@ -447,7 +447,7 @@ func MarchingCubes(field ScalarField, n int, threshold float64) []stl.Triangle {
 }
 
 //vMarchCube1 performs the Marching Cubes algorithm on a single cube
-func marchCube(t []stl.Triangle, field ScalarField, threshold, fX, fY, fZ, fScale float64) []stl.Triangle {
+func marchCube(t []stl.Triangle, field ScalarField, threshold, fX, fY, fZ, fScale float64, size Vector) []stl.Triangle {
 	var iCorner, iVertex, iVertexTest, iEdge, iTriangle, iFlagIndex, iEdgeFlags int
 	var fOffset float64
 	var afCubeValue [8]float64
@@ -507,8 +507,10 @@ func marchCube(t []stl.Triangle, field ScalarField, threshold, fX, fY, fZ, fScal
 
 			// This is actually being assigned 3 times to possibly different values.
 			// Find out what to do with this.
-			tt.N = stl.Point{float32(asEdgeNorm[iVertex].X), float32(asEdgeNorm[iVertex].Y), float32(asEdgeNorm[iVertex].Z)}
-			tt.V[iCorner] = stl.Point{float32(asEdgeVertex[iVertex].X), float32(asEdgeVertex[iVertex].Y), float32(asEdgeVertex[iVertex].Z)}
+			nv := Vector{size.X * asEdgeNorm[iVertex].X, size.Y * asEdgeNorm[iVertex].Y, size.Z * asEdgeNorm[iVertex].Z}
+			nv = normalizeVector(nv)
+			tt.N = stl.Point{float32(nv.X), float32(nv.Y), float32(nv.Z)}
+			tt.V[iCorner] = stl.Point{float32(size.X * asEdgeVertex[iVertex].X), float32(size.Y * asEdgeVertex[iVertex].Y), float32(size.Z * asEdgeVertex[iVertex].Z)}
 		}
 		t = append(t, tt)
 	}

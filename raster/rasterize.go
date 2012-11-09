@@ -72,6 +72,14 @@ func (g Grid) Coord(pos [3]int) [3]float64 {
 	}
 }
 
+func (g Grid) Size() [3]float64 {
+	return [3]float64{
+		g.P1[0] - g.P0[0],
+		g.P1[1] - g.P0[1],
+		g.P1[2] - g.P0[2],
+	}
+}
+
 type Mesh struct {
 	Grid
 	Triangle []triangle.Triangle

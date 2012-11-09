@@ -199,7 +199,9 @@ func main() {
 	*/
 
 	//	t := surface.MarchingCubes(sampleField2, 256, 48)
-	t := surface.MarchingCubes(NewVolumeField(vol), 128, 48)
+	size := mesh.Grid.Size()
+	vsize := surface.Vector{size[0], size[1], size[2]}
+	t := surface.MarchingCubes(NewVolumeField(vol), 128, 48, vsize)
 	var f *os.File
 	if f, err = os.OpenFile("output.stl", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644); err != nil {
 		log.Fatal(err)
