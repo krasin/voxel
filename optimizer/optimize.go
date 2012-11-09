@@ -128,6 +128,27 @@ func sampleField(fX, fY, fZ float64) float64 {
 	return fResult
 }
 
+func sampleField2(fX, fY, fZ float64) float64 {
+	var fResult float64
+	var fDx, fDy, fDz float64
+	fDx = fX - sSourcePoint[0].fX
+	fDy = fY - sSourcePoint[0].fY
+	fDz = fZ - sSourcePoint[0].fZ
+	fResult += 0.5 / (fDx*fDx + fDy*fDy + fDz*fDz)
+
+	fDx = fX - sSourcePoint[1].fX
+	fDy = fY - sSourcePoint[1].fY
+	fDz = fZ - sSourcePoint[1].fZ
+	fResult += 1.0 / (fDx*fDx + fDy*fDy + fDz*fDz)
+
+	fDx = fX - sSourcePoint[2].fX
+	fDy = fY - sSourcePoint[2].fY
+	fDz = fZ - sSourcePoint[2].fZ
+	fResult += 1.5 / (fDx*fDx + fDy*fDy + fDz*fDz)
+
+	return fResult
+}
+
 func main() {
 	timing.StartTiming("total")
 	timing.StartTiming("Read STL from Stdin")
@@ -167,7 +188,7 @@ func main() {
 		timing.StopTiming("Write nptl")
 	*/
 
-	t := surface.MarchingCubes(sampleField)
+	t := surface.MarchingCubes(sampleField2)
 	var f *os.File
 	if f, err = os.OpenFile("output.stl", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644); err != nil {
 		log.Fatal(err)
