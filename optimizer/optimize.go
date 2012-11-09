@@ -95,6 +95,39 @@ type VolumeSetter interface {
 
 type Location16 [2]int16
 
+type vector struct {
+	fX, fY, fZ float64
+}
+
+var (
+	sSourcePoint = [3]vector{
+		{0.35, 0.35, 0.35},
+		{0.35, 0.65, 0.35},
+		{0.65, 0.35, 0.65},
+	}
+)
+
+func sampleField(fX, fY, fZ float64) float64 {
+	if math.Abs(fX) < 0.1 || math.Abs(fY) < 0.1 || math.Abs(fZ) < 0.1 ||
+		math.Abs(fX) > 0.9 || math.Abs(fY) > 0.9 || math.Abs(fZ) > 0.9 {
+		return 0
+	}
+	fResult := 0.0
+	fDx := fX - sSourcePoint[0].fX
+	fDy := fY - sSourcePoint[0].fY
+	fResult += 0.5 / (fDx*fDx + fDy*fDy)
+
+	fDx = fX - sSourcePoint[1].fX
+	fDz := fZ - sSourcePoint[1].fZ
+	fResult += 0.75 / (fDx*fDx + fDz*fDz)
+
+	fDy = fY - sSourcePoint[2].fY
+	fDz = fZ - sSourcePoint[2].fZ
+	fResult += 1.0 / (fDy*fDy + fDz*fDz)
+
+	return fResult
+}
+
 func main() {
 	timing.StartTiming("total")
 	timing.StartTiming("Read STL from Stdin")
@@ -134,7 +167,7 @@ func main() {
 		timing.StopTiming("Write nptl")
 	*/
 
-	t := surface.MarchingCubes()
+	t := surface.MarchingCubes(sampleField)
 	var f *os.File
 	if f, err = os.OpenFile("output.stl", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644); err != nil {
 		log.Fatal(err)

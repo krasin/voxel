@@ -6,6 +6,9 @@ import (
 	"github.com/krasin/stl"
 )
 
+// ScalarField represents a real scalar field in the cube 1x1x1
+type ScalarField func(x, y, z float64) float64
+
 // This file contains an implementation of Marching Cubes algorithms
 // based on the information given at
 // http://paulbourke.net/geometry/polygonise/
@@ -388,7 +391,6 @@ type vector struct {
 
 var (
 	vMarchCube   = vMarchCube1
-	fSample      = fSample2
 	iDataSetSize = 64
 	fStepSize    = 1.0 / float64(iDataSetSize)
 	fTargetValue = 48.0
@@ -453,21 +455,21 @@ func vNormalizeVector(rfVectorSource vector) (rfVectorResult vector) {
 
 //vGetNormal() finds the gradient of the scalar field at a point
 //This gradient can be used as a very accurate vertx normal for lighting calculations
-func vGetNormal(fX, fY, fZ float64) (rfNormal vector) {
-	rfNormal.fX = fSample(fX-0.01, fY, fZ) - fSample(fX+0.01, fY, fZ)
-	rfNormal.fY = fSample(fX, fY-0.01, fZ) - fSample(fX, fY+0.01, fZ)
-	rfNormal.fZ = fSample(fX, fY, fZ-0.01) - fSample(fX, fY, fZ+0.01)
+func vGetNormal(field ScalarField, fX, fY, fZ float64) (rfNormal vector) {
+	rfNormal.fX = field(fX-0.01, fY, fZ) - field(fX+0.01, fY, fZ)
+	rfNormal.fY = field(fX, fY-0.01, fZ) - field(fX, fY+0.01, fZ)
+	rfNormal.fZ = field(fX, fY, fZ-0.01) - field(fX, fY, fZ+0.01)
 	rfNormal = vNormalizeVector(rfNormal)
 	return
 }
 
 //vMarchingCubes iterates over the entire dataset, calling vMarchCube on each cube
-func MarchingCubes() []stl.Triangle {
+func MarchingCubes(field ScalarField) []stl.Triangle {
 	var t []stl.Triangle
 	for iX := 0; iX < iDataSetSize; iX++ {
 		for iY := 0; iY < iDataSetSize; iY++ {
 			for iZ := 0; iZ < iDataSetSize; iZ++ {
-				t = vMarchCube(t, float64(iX)*fStepSize, float64(iY)*fStepSize, float64(iZ)*fStepSize, fStepSize)
+				t = vMarchCube(t, field, float64(iX)*fStepSize, float64(iY)*fStepSize, float64(iZ)*fStepSize, fStepSize)
 			}
 		}
 	}
@@ -475,7 +477,7 @@ func MarchingCubes() []stl.Triangle {
 }
 
 //vMarchCube1 performs the Marching Cubes algorithm on a single cube
-func vMarchCube1(t []stl.Triangle, fX, fY, fZ, fScale float64) []stl.Triangle {
+func vMarchCube1(t []stl.Triangle, field ScalarField, fX, fY, fZ, fScale float64) []stl.Triangle {
 	var iCorner, iVertex, iVertexTest, iEdge, iTriangle, iFlagIndex, iEdgeFlags int
 	var fOffset float64
 	var afCubeValue [8]float64
@@ -485,7 +487,7 @@ func vMarchCube1(t []stl.Triangle, fX, fY, fZ, fScale float64) []stl.Triangle {
 	//Make a local copy of the values at the cube's corners
 	for iVertex = 0; iVertex < 8; iVertex++ {
 
-		afCubeValue[iVertex] = fSample(fX+a2fVertexOffset[iVertex][0]*fScale,
+		afCubeValue[iVertex] = field(fX+a2fVertexOffset[iVertex][0]*fScale,
 			fY+a2fVertexOffset[iVertex][1]*fScale,
 			fZ+a2fVertexOffset[iVertex][2]*fScale)
 	}
@@ -519,7 +521,7 @@ func vMarchCube1(t []stl.Triangle, fX, fY, fZ, fScale float64) []stl.Triangle {
 			asEdgeVertex[iEdge].fY = fY + (a2fVertexOffset[a2iEdgeConnection[iEdge][0]][1]+fOffset*a2fEdgeDirection[iEdge][1])*fScale
 			asEdgeVertex[iEdge].fZ = fZ + (a2fVertexOffset[a2iEdgeConnection[iEdge][0]][2]+fOffset*a2fEdgeDirection[iEdge][2])*fScale
 
-			asEdgeNorm[iEdge] = vGetNormal(asEdgeVertex[iEdge].fX, asEdgeVertex[iEdge].fY, asEdgeVertex[iEdge].fZ)
+			asEdgeNorm[iEdge] = vGetNormal(field, asEdgeVertex[iEdge].fX, asEdgeVertex[iEdge].fY, asEdgeVertex[iEdge].fZ)
 		}
 	}
 
