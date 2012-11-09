@@ -390,16 +390,10 @@ type vector struct {
 }
 
 var (
-	vMarchCube   = vMarchCube1
 	iDataSetSize = 64
 	fStepSize    = 1.0 / float64(iDataSetSize)
 	fTargetValue = 48.0
 	fTime        = 0.0
-	sSourcePoint = [3]vector{
-		{0.35, 0.35, 0.35},
-		{0.35, 0.65, 0.35},
-		{0.65, 0.35, 0.65},
-	}
 )
 
 //fGetOffset finds the approximate point of intersection of the surface
@@ -412,27 +406,6 @@ func fGetOffset(fValue1, fValue2, fValueDesired float64) float64 {
 	}
 
 	return (fValueDesired - fValue1) / fDelta
-}
-
-func zeroPlus(x float64) float64 {
-	if x >= 0 {
-		return x
-	}
-	return 0
-}
-
-//vGetColor generates a color from a given position and normal of a point
-func vGetColor(rfPosition, rfNormal vector) (rfColor vector) {
-	fX := rfNormal.fX
-	fY := rfNormal.fY
-	fZ := rfNormal.fZ
-	rfColor.fX = zeroPlus(fX) + zeroPlus(-0.5*fY) + zeroPlus(-0.5*fZ)
-	//        rfColor.fX = (fX > 0.0 ? fX : 0.0) + (fY < 0.0 ? -0.5*fY : 0.0) + (fZ < 0.0 ? -0.5*fZ : 0.0);
-	rfColor.fY = zeroPlus(fY) + zeroPlus(-0.5*fZ) + zeroPlus(-0.5*fX)
-	//        rfColor.fY = (fY > 0.0 ? fY : 0.0) + (fZ < 0.0 ? -0.5*fZ : 0.0) + (fX < 0.0 ? -0.5*fX : 0.0);
-	rfColor.fZ = zeroPlus(fZ) + zeroPlus(-0.5*fX) + zeroPlus(-0.5*fY)
-	//        rfColor.fZ = (fZ > 0.0 ? fZ : 0.0) + (fX < 0.0 ? -0.5*fX : 0.0) + (fY < 0.0 ? -0.5*fY : 0.0);
-	return
 }
 
 func vNormalizeVector(rfVectorSource vector) (rfVectorResult vector) {
@@ -469,7 +442,7 @@ func MarchingCubes(field ScalarField) []stl.Triangle {
 	for iX := 0; iX < iDataSetSize; iX++ {
 		for iY := 0; iY < iDataSetSize; iY++ {
 			for iZ := 0; iZ < iDataSetSize; iZ++ {
-				t = vMarchCube(t, field, float64(iX)*fStepSize, float64(iY)*fStepSize, float64(iZ)*fStepSize, fStepSize)
+				t = marchCube(t, field, float64(iX)*fStepSize, float64(iY)*fStepSize, float64(iZ)*fStepSize, fStepSize)
 			}
 		}
 	}
@@ -477,7 +450,7 @@ func MarchingCubes(field ScalarField) []stl.Triangle {
 }
 
 //vMarchCube1 performs the Marching Cubes algorithm on a single cube
-func vMarchCube1(t []stl.Triangle, field ScalarField, fX, fY, fZ, fScale float64) []stl.Triangle {
+func marchCube(t []stl.Triangle, field ScalarField, fX, fY, fZ, fScale float64) []stl.Triangle {
 	var iCorner, iVertex, iVertexTest, iEdge, iTriangle, iFlagIndex, iEdgeFlags int
 	var fOffset float64
 	var afCubeValue [8]float64
@@ -539,67 +512,8 @@ func vMarchCube1(t []stl.Triangle, field ScalarField, fX, fY, fZ, fScale float64
 			// Find out what to do with this.
 			tt.N = stl.Point{float32(asEdgeNorm[iVertex].fX), float32(asEdgeNorm[iVertex].fY), float32(asEdgeNorm[iVertex].fZ)}
 			tt.V[iCorner] = stl.Point{float32(asEdgeVertex[iVertex].fX), float32(asEdgeVertex[iVertex].fY), float32(asEdgeVertex[iVertex].fZ)}
-
-			//sColor = vGetColor(asEdgeVertex[iVertex], asEdgeNorm[iVertex])
-			//                        glColor3f(sColor.fX, sColor.fY, sColor.fZ);
-			//                        glNormal3f(asEdgeNorm[iVertex].fX,   asEdgeNorm[iVertex].fY,   asEdgeNorm[iVertex].fZ);
-			//                        glVertex3f(asEdgeVertex[iVertex].fX, asEdgeVertex[iVertex].fY, asEdgeVertex[iVertex].fZ);
 		}
 		t = append(t, tt)
 	}
 	return t
 }
-
-//fSample1 finds the distance of (fX, fY, fZ) from three moving points
-func fSample1(fX, fY, fZ float64) float64 {
-	var fResult float64
-	var fDx, fDy, fDz float64
-	fDx = fX - sSourcePoint[0].fX
-	fDy = fY - sSourcePoint[0].fY
-	fDz = fZ - sSourcePoint[0].fZ
-	fResult += 0.5 / (fDx*fDx + fDy*fDy + fDz*fDz)
-
-	fDx = fX - sSourcePoint[1].fX
-	fDy = fY - sSourcePoint[1].fY
-	fDz = fZ - sSourcePoint[1].fZ
-	fResult += 1.0 / (fDx*fDx + fDy*fDy + fDz*fDz)
-
-	fDx = fX - sSourcePoint[2].fX
-	fDy = fY - sSourcePoint[2].fY
-	fDz = fZ - sSourcePoint[2].fZ
-	fResult += 1.5 / (fDx*fDx + fDy*fDy + fDz*fDz)
-
-	return fResult
-}
-
-//fSample2 finds the distance of (fX, fY, fZ) from three moving lines
-func fSample2(fX, fY, fZ float64) float64 {
-	if math.Abs(fX) < 0.1 || math.Abs(fY) < 0.1 || math.Abs(fZ) < 0.1 ||
-		math.Abs(fX) > 0.9 || math.Abs(fY) > 0.9 || math.Abs(fZ) > 0.9 {
-		return 0
-	}
-	fResult := 0.0
-	fDx := fX - sSourcePoint[0].fX
-	fDy := fY - sSourcePoint[0].fY
-	fResult += 0.5 / (fDx*fDx + fDy*fDy)
-
-	fDx = fX - sSourcePoint[1].fX
-	fDz := fZ - sSourcePoint[1].fZ
-	fResult += 0.75 / (fDx*fDx + fDz*fDz)
-
-	fDy = fY - sSourcePoint[2].fY
-	fDz = fZ - sSourcePoint[2].fZ
-	fResult += 1.0 / (fDy*fDy + fDz*fDz)
-
-	return fResult
-}
-
-/*func main() {
-	log.Printf("Starting marshing cubes...\n")
-	t := MarchingCubes()
-	log.Printf("Done! %d triangles\n", len(t))
-	if err := stl.Write(os.Stdout, t); err != nil {
-		log.Fatalf("stl.Write: %v", err)
-	}
-}
-*/
