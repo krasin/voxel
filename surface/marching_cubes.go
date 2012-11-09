@@ -390,10 +390,7 @@ type vector struct {
 }
 
 var (
-	iDataSetSize = 64
-	fStepSize    = 1.0 / float64(iDataSetSize)
 	fTargetValue = 48.0
-	fTime        = 0.0
 )
 
 //fGetOffset finds the approximate point of intersection of the surface
@@ -437,11 +434,12 @@ func vGetNormal(field ScalarField, fX, fY, fZ float64) (rfNormal vector) {
 }
 
 //vMarchingCubes iterates over the entire dataset, calling vMarchCube on each cube
-func MarchingCubes(field ScalarField) []stl.Triangle {
+func MarchingCubes(field ScalarField, n int) []stl.Triangle {
+	fStepSize := 1.0 / float64(n)
 	var t []stl.Triangle
-	for iX := 0; iX < iDataSetSize; iX++ {
-		for iY := 0; iY < iDataSetSize; iY++ {
-			for iZ := 0; iZ < iDataSetSize; iZ++ {
+	for iX := 0; iX < n; iX++ {
+		for iY := 0; iY < n; iY++ {
+			for iZ := 0; iZ < n; iZ++ {
 				t = marchCube(t, field, float64(iX)*fStepSize, float64(iY)*fStepSize, float64(iZ)*fStepSize, fStepSize)
 			}
 		}

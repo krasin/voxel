@@ -188,7 +188,7 @@ func main() {
 		timing.StopTiming("Write nptl")
 	*/
 
-	t := surface.MarchingCubes(sampleField2)
+	t := surface.MarchingCubes(sampleField2, 16)
 	var f *os.File
 	if f, err = os.OpenFile("output.stl", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644); err != nil {
 		log.Fatal(err)
