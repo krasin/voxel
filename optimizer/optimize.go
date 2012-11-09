@@ -143,6 +143,22 @@ func sampleField2(fX, fY, fZ float64) float64 {
 	return fResult
 }
 
+func NewVolumeField(vol Uint16Volume) surface.ScalarField {
+	return func(x, y, z float64) float64 {
+		if x <= 0 || x >= 1 || y <= 0 || y >= 1 || z <= 0 || z >= 1 {
+			return 0
+		}
+		xx := int(x * float64(vol.XLen()))
+		yy := int(y * float64(vol.YLen()))
+		zz := int(z * float64(vol.ZLen()))
+		val := vol.Get(xx, yy, zz)
+		if val {
+			return 100
+		}
+		return 0
+	}
+}
+
 func main() {
 	timing.StartTiming("total")
 	timing.StartTiming("Read STL from Stdin")
@@ -182,7 +198,8 @@ func main() {
 		timing.StopTiming("Write nptl")
 	*/
 
-	t := surface.MarchingCubes(sampleField2, 256, 48)
+	//	t := surface.MarchingCubes(sampleField2, 256, 48)
+	t := surface.MarchingCubes(NewVolumeField(vol), 128, 48)
 	var f *os.File
 	if f, err = os.OpenFile("output.stl", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644); err != nil {
 		log.Fatal(err)
