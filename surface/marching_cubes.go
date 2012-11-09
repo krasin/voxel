@@ -4,18 +4,7 @@ import (
 	"math"
 
 	"github.com/krasin/stl"
-	"github.com/krasin/voxel/raster"
-	"github.com/krasin/voxel/volume"
 )
-
-type Uint16Volume interface {
-	volume.BoolVoxelVolume
-	Set(x, y, z int, v uint16)
-	GetV(x, y, z int) uint16
-	SetAllFilled(threshold, val uint16)
-	MapBoundary(f func(x, y, z int))
-	Volume() int64
-}
 
 // This file contains an implementation of Marching Cubes algorithms
 // based on the information given at
@@ -473,7 +462,7 @@ func vGetNormal(fX, fY, fZ float64) (rfNormal vector) {
 }
 
 //vMarchingCubes iterates over the entire dataset, calling vMarchCube on each cube
-func MarchingCubes(vol Uint16Volume, grid raster.Grid) []stl.Triangle {
+func MarchingCubes() []stl.Triangle {
 	var t []stl.Triangle
 	for iX := 0; iX < iDataSetSize; iX++ {
 		for iY := 0; iY < iDataSetSize; iY++ {
