@@ -431,17 +431,15 @@ func vGetNormal(field ScalarField, fX, fY, fZ float64) (rfNormal Vector) {
 
 //vMarchingCubes iterates over the entire dataset, calling vMarchCube on each cube
 func MarchingCubes(field ScalarField, n int, threshold float64) []stl.Triangle {
-	fStepSize := 1.0 / float64(n)
+	step := 1.0 / float64(n)
 	var t []stl.Triangle
-	for iX := 0; iX < n; iX++ {
-		for iY := 0; iY < n; iY++ {
-			for iZ := 0; iZ < n; iZ++ {
-				t = marchCube(t, field,
-					threshold,
-					float64(iX)*fStepSize,
-					float64(iY)*fStepSize,
-					float64(iZ)*fStepSize,
-					fStepSize)
+	for x := 0; x < n; x++ {
+		fx := float64(x) * step
+		for y := 0; y < n; y++ {
+			fy := float64(y) * step
+			for z := 0; z < n; z++ {
+				fz := float64(z) * step
+				t = marchCube(t, field, threshold, fx, fy, fz, step)
 			}
 		}
 	}
