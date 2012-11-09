@@ -95,17 +95,11 @@ type VolumeSetter interface {
 
 type Location16 [2]int16
 
-type vector struct {
-	fX, fY, fZ float64
+var sSourcePoint = [3]surface.Vector{
+	{0.35, 0.35, 0.35},
+	{0.35, 0.65, 0.35},
+	{0.65, 0.35, 0.65},
 }
-
-var (
-	sSourcePoint = [3]vector{
-		{0.35, 0.35, 0.35},
-		{0.35, 0.65, 0.35},
-		{0.65, 0.35, 0.65},
-	}
-)
 
 func sampleField(fX, fY, fZ float64) float64 {
 	if math.Abs(fX) < 0.1 || math.Abs(fY) < 0.1 || math.Abs(fZ) < 0.1 ||
@@ -113,16 +107,16 @@ func sampleField(fX, fY, fZ float64) float64 {
 		return 0
 	}
 	fResult := 0.0
-	fDx := fX - sSourcePoint[0].fX
-	fDy := fY - sSourcePoint[0].fY
+	fDx := fX - sSourcePoint[0].X
+	fDy := fY - sSourcePoint[0].Y
 	fResult += 0.5 / (fDx*fDx + fDy*fDy)
 
-	fDx = fX - sSourcePoint[1].fX
-	fDz := fZ - sSourcePoint[1].fZ
+	fDx = fX - sSourcePoint[1].X
+	fDz := fZ - sSourcePoint[1].Z
 	fResult += 0.75 / (fDx*fDx + fDz*fDz)
 
-	fDy = fY - sSourcePoint[2].fY
-	fDz = fZ - sSourcePoint[2].fZ
+	fDy = fY - sSourcePoint[2].Y
+	fDz = fZ - sSourcePoint[2].Z
 	fResult += 1.0 / (fDy*fDy + fDz*fDz)
 
 	return fResult
@@ -131,19 +125,19 @@ func sampleField(fX, fY, fZ float64) float64 {
 func sampleField2(fX, fY, fZ float64) float64 {
 	var fResult float64
 	var fDx, fDy, fDz float64
-	fDx = fX - sSourcePoint[0].fX
-	fDy = fY - sSourcePoint[0].fY
-	fDz = fZ - sSourcePoint[0].fZ
+	fDx = fX - sSourcePoint[0].X
+	fDy = fY - sSourcePoint[0].Y
+	fDz = fZ - sSourcePoint[0].Z
 	fResult += 0.5 / (fDx*fDx + fDy*fDy + fDz*fDz)
 
-	fDx = fX - sSourcePoint[1].fX
-	fDy = fY - sSourcePoint[1].fY
-	fDz = fZ - sSourcePoint[1].fZ
+	fDx = fX - sSourcePoint[1].X
+	fDy = fY - sSourcePoint[1].Y
+	fDz = fZ - sSourcePoint[1].Z
 	fResult += 1.0 / (fDx*fDx + fDy*fDy + fDz*fDz)
 
-	fDx = fX - sSourcePoint[2].fX
-	fDy = fY - sSourcePoint[2].fY
-	fDz = fZ - sSourcePoint[2].fZ
+	fDx = fX - sSourcePoint[2].X
+	fDy = fY - sSourcePoint[2].Y
+	fDz = fZ - sSourcePoint[2].Z
 	fResult += 1.5 / (fDx*fDx + fDy*fDy + fDz*fDz)
 
 	return fResult

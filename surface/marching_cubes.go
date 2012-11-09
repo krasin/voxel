@@ -385,8 +385,8 @@ var a2iTriangleConnectionTable = [256][16]int{
 	{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
 }
 
-type vector struct {
-	fX, fY, fZ float64
+type Vector struct {
+	X, Y, Z float64
 }
 
 //fGetOffset finds the approximate point of intersection of the surface
@@ -401,30 +401,30 @@ func fGetOffset(fValue1, fValue2, fValueDesired float64) float64 {
 	return (fValueDesired - fValue1) / fDelta
 }
 
-func vNormalizeVector(rfVectorSource vector) (rfVectorResult vector) {
-	fOldLength := math.Sqrt((rfVectorSource.fX * rfVectorSource.fX) +
-		(rfVectorSource.fY * rfVectorSource.fY) +
-		(rfVectorSource.fZ * rfVectorSource.fZ))
+func vNormalizeVector(rfVectorSource Vector) (rfVectorResult Vector) {
+	fOldLength := math.Sqrt((rfVectorSource.X * rfVectorSource.X) +
+		(rfVectorSource.Y * rfVectorSource.Y) +
+		(rfVectorSource.Z * rfVectorSource.Z))
 
 	if fOldLength == 0.0 {
-		rfVectorResult.fX = rfVectorSource.fX
-		rfVectorResult.fY = rfVectorSource.fY
-		rfVectorResult.fZ = rfVectorSource.fZ
+		rfVectorResult.X = rfVectorSource.X
+		rfVectorResult.Y = rfVectorSource.Y
+		rfVectorResult.Z = rfVectorSource.Z
 	} else {
 		fScale := 1.0 / fOldLength
-		rfVectorResult.fX = rfVectorSource.fX * fScale
-		rfVectorResult.fY = rfVectorSource.fY * fScale
-		rfVectorResult.fZ = rfVectorSource.fZ * fScale
+		rfVectorResult.X = rfVectorSource.X * fScale
+		rfVectorResult.Y = rfVectorSource.Y * fScale
+		rfVectorResult.Z = rfVectorSource.Z * fScale
 	}
 	return
 }
 
 //vGetNormal() finds the gradient of the scalar field at a point
 //This gradient can be used as a very accurate vertx normal for lighting calculations
-func vGetNormal(field ScalarField, fX, fY, fZ float64) (rfNormal vector) {
-	rfNormal.fX = field(fX-0.01, fY, fZ) - field(fX+0.01, fY, fZ)
-	rfNormal.fY = field(fX, fY-0.01, fZ) - field(fX, fY+0.01, fZ)
-	rfNormal.fZ = field(fX, fY, fZ-0.01) - field(fX, fY, fZ+0.01)
+func vGetNormal(field ScalarField, fX, fY, fZ float64) (rfNormal Vector) {
+	rfNormal.X = field(fX-0.01, fY, fZ) - field(fX+0.01, fY, fZ)
+	rfNormal.Y = field(fX, fY-0.01, fZ) - field(fX, fY+0.01, fZ)
+	rfNormal.Z = field(fX, fY, fZ-0.01) - field(fX, fY, fZ+0.01)
 	rfNormal = vNormalizeVector(rfNormal)
 	return
 }
@@ -453,8 +453,8 @@ func marchCube(t []stl.Triangle, field ScalarField, threshold, fX, fY, fZ, fScal
 	var iCorner, iVertex, iVertexTest, iEdge, iTriangle, iFlagIndex, iEdgeFlags int
 	var fOffset float64
 	var afCubeValue [8]float64
-	var asEdgeVertex [12]vector
-	var asEdgeNorm [12]vector
+	var asEdgeVertex [12]Vector
+	var asEdgeNorm [12]Vector
 
 	//Make a local copy of the values at the cube's corners
 	for iVertex = 0; iVertex < 8; iVertex++ {
@@ -489,11 +489,11 @@ func marchCube(t []stl.Triangle, field ScalarField, threshold, fX, fY, fZ, fScal
 			fOffset = fGetOffset(afCubeValue[a2iEdgeConnection[iEdge][0]],
 				afCubeValue[a2iEdgeConnection[iEdge][1]], threshold)
 
-			asEdgeVertex[iEdge].fX = fX + (a2fVertexOffset[a2iEdgeConnection[iEdge][0]][0]+fOffset*a2fEdgeDirection[iEdge][0])*fScale
-			asEdgeVertex[iEdge].fY = fY + (a2fVertexOffset[a2iEdgeConnection[iEdge][0]][1]+fOffset*a2fEdgeDirection[iEdge][1])*fScale
-			asEdgeVertex[iEdge].fZ = fZ + (a2fVertexOffset[a2iEdgeConnection[iEdge][0]][2]+fOffset*a2fEdgeDirection[iEdge][2])*fScale
+			asEdgeVertex[iEdge].X = fX + (a2fVertexOffset[a2iEdgeConnection[iEdge][0]][0]+fOffset*a2fEdgeDirection[iEdge][0])*fScale
+			asEdgeVertex[iEdge].Y = fY + (a2fVertexOffset[a2iEdgeConnection[iEdge][0]][1]+fOffset*a2fEdgeDirection[iEdge][1])*fScale
+			asEdgeVertex[iEdge].Z = fZ + (a2fVertexOffset[a2iEdgeConnection[iEdge][0]][2]+fOffset*a2fEdgeDirection[iEdge][2])*fScale
 
-			asEdgeNorm[iEdge] = vGetNormal(field, asEdgeVertex[iEdge].fX, asEdgeVertex[iEdge].fY, asEdgeVertex[iEdge].fZ)
+			asEdgeNorm[iEdge] = vGetNormal(field, asEdgeVertex[iEdge].X, asEdgeVertex[iEdge].Y, asEdgeVertex[iEdge].Z)
 		}
 	}
 
@@ -509,8 +509,8 @@ func marchCube(t []stl.Triangle, field ScalarField, threshold, fX, fY, fZ, fScal
 
 			// This is actually being assigned 3 times to possibly different values.
 			// Find out what to do with this.
-			tt.N = stl.Point{float32(asEdgeNorm[iVertex].fX), float32(asEdgeNorm[iVertex].fY), float32(asEdgeNorm[iVertex].fZ)}
-			tt.V[iCorner] = stl.Point{float32(asEdgeVertex[iVertex].fX), float32(asEdgeVertex[iVertex].fY), float32(asEdgeVertex[iVertex].fZ)}
+			tt.N = stl.Point{float32(asEdgeNorm[iVertex].X), float32(asEdgeNorm[iVertex].Y), float32(asEdgeNorm[iVertex].Z)}
+			tt.V[iCorner] = stl.Point{float32(asEdgeVertex[iVertex].X), float32(asEdgeVertex[iVertex].Y), float32(asEdgeVertex[iVertex].Z)}
 		}
 		t = append(t, tt)
 	}
