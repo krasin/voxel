@@ -159,6 +159,73 @@ func NewVolumeField(vol Uint16Volume) surface.ScalarField {
 	}
 }
 
+type adj struct {
+	dx, dy, dz int
+	weight     float64
+}
+
+var cells = []adj{
+	{0, 0, 0, 0.85},
+	{1, 0, 0, 0.5},
+	{0, 1, 0, 0.5},
+	{0, 0, 1, 0.5},
+	{-1, 0, 0, 0.5},
+	{0, -1, 0, 0.5},
+	{0, 0, -1, 0.5},
+	{1, 1, 0, 0.25},
+	{1, 0, 1, 0.25},
+	{0, 1, 1, 0.25},
+	{-1, 1, 0, 0.25},
+	{-1, 0, 1, 0.25},
+	{0, -1, 1, 0.25},
+	{1, -1, 0, 0.25},
+	{1, 0, -1, 0.25},
+	{0, 1, -1, 0.25},
+	{-1, -1, 0, 0.25},
+	{-1, 0, -1, 0.25},
+	{0, -1, -1, 0.25},
+}
+
+func NewVolumeField2(vol Uint16Volume) surface.ScalarField {
+	return func(x, y, z float64) float64 {
+		if x <= 0 || x >= 1 || y <= 0 || y >= 1 || z <= 0 || z >= 1 {
+			return 0
+		}
+		fx := x * float64(vol.XLen())
+		fy := y * float64(vol.YLen())
+		fz := z * float64(vol.ZLen())
+
+		xx := int(fx)
+		yy := int(fy)
+		zz := int(fz)
+
+		dx := fx - float64(xx) - 0.5
+		dy := fy - float64(yy) - 0.5
+		dz := fz - float64(zz) - 0.5
+
+		//		r02 := dx*dx + dy*dy + dz*dz + 0.1
+
+		var val float64
+		for _, cell := range cells {
+			var v float64
+			if vol.Get(xx+cell.dx, yy+cell.dy, zz+cell.dz) {
+				v = 1
+			}
+			ddx := dx - float64(cell.dx)
+			ddy := dy - float64(cell.dy)
+			ddz := dz - float64(cell.dz)
+			r2 := ddx*ddx + ddy*ddy + ddz*ddz + 0.1
+			val += cell.weight * v / r2
+		}
+		/*		v0 := float64(0)
+				if vol.Get(xx, yy, zz) {
+					v0 = 1
+				}
+				val := 0.85 * v0 / r02*/
+		return val
+	}
+}
+
 func main() {
 	timing.StartTiming("total")
 	timing.StartTiming("Read STL from Stdin")
@@ -201,7 +268,7 @@ func main() {
 	//	t := surface.MarchingCubes(sampleField2, 256, 48)
 	size := mesh.Grid.Size()
 	vsize := surface.Vector{size[0], size[1], size[2]}
-	t := surface.MarchingCubes(NewVolumeField(vol), 128, 48, vsize)
+	t := surface.MarchingCubes(NewVolumeField2(vol), 128, 0.8, vsize)
 	var f *os.File
 	if f, err = os.OpenFile("output.stl", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644); err != nil {
 		log.Fatal(err)
