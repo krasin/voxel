@@ -1,3 +1,32 @@
+Current plan:
+
+goal: refine the code to use it as a library for things, like 3d print optimizer or mold generation.
+
+current task: reconstruction of the surface.
+
+status: marching cubes are already ported.
+Now, need a good way to build an iso-surface.
+
+Proposal:
+
+1. Find all points on depth >= R
+2. Draw metaballs with r0=R and formula (1-r/r0^2)^2, if r < r0.
+3. Run maching cubes on iso-surface built with metaballs.
+
+This will not preserve sharp edges.
+
+In order to fix that, the following advance operation is proposed:
+
+1. Invert the space
+2. Draw metaballs like above
+3. Run PoissonRecon or similar algorithm, which will preserve sharp edges.
+4. Invert normals (this will invert the space back).
+
+The inversion will only preserve outer sharp edges and will make inner sharp edges to of radius R.
+This is considered normal.
+
+==== Old plan (2011) ===
+
 Minimum Viable Product for 3d print optimizer.
 
 1. A simple website (AppEngine) that allows to upload a mesh, stores it in the blob, adds a task for worker. Worker will download the blob and upload the result.
