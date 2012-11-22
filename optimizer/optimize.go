@@ -6,6 +6,7 @@ import (
 	"math"
 	"os"
 
+	"github.com/krasin/g3"
 	"github.com/krasin/stl"
 	//	"github.com/krasin/voxel/nptl"
 	"github.com/krasin/voxel/raster"
@@ -151,7 +152,7 @@ func NewVolumeField(vol Uint16Volume) surface.ScalarField {
 		xx := int(x * float64(vol.XLen()))
 		yy := int(y * float64(vol.YLen()))
 		zz := int(z * float64(vol.ZLen()))
-		val := vol.Get(xx, yy, zz)
+		val := vol.Get(g3.Node{xx, yy, zz})
 		if val {
 			return 100
 		}
@@ -208,7 +209,7 @@ func NewVolumeField2(vol Uint16Volume) surface.ScalarField {
 		var val float64
 		for _, cell := range cells {
 			var v float64
-			if vol.Get(xx+cell.dx, yy+cell.dy, zz+cell.dz) {
+			if vol.Get(g3.Node{xx + cell.dx, yy + cell.dy, zz + cell.dz}) {
 				v = 1
 			}
 			ddx := dx - float64(cell.dx)

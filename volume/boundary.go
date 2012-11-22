@@ -3,7 +3,7 @@ package volume
 import "github.com/krasin/g3"
 
 type BoolVoxelVolume interface {
-	Get(x, y, z int) bool
+	Get(node g3.Node) bool
 	XLen() int
 	YLen() int
 	ZLen() int
@@ -14,7 +14,7 @@ func Normal(vol BoolVoxelVolume, node g3.Node) g3.Vector {
 
 	for _, vec := range g3.AdjNodes26 {
 		cur := node.Add(vec)
-		if !vol.Get(cur[0], cur[1], cur[2]) {
+		if !vol.Get(cur) {
 			continue
 		}
 		p.Sub(vec)
@@ -26,12 +26,12 @@ func Normal(vol BoolVoxelVolume, node g3.Node) g3.Vector {
 }
 
 func IsBoundary(vol BoolVoxelVolume, node g3.Node) bool {
-	if !vol.Get(node[0], node[1], node[2]) {
+	if !vol.Get(node) {
 		return false
 	}
 	for _, v := range g3.AdjNodes6 {
 		cur := node.Add(v)
-		if !vol.Get(cur[0], cur[1], cur[2]) {
+		if !vol.Get(cur) {
 			return true
 		}
 	}

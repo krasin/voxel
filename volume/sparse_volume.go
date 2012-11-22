@@ -32,8 +32,8 @@ func NewSparseVolume(n int) (v *SparseVolume) {
 }
 
 // Get returns true, if the voxel is filled (color != 0).
-func (v *SparseVolume) Get(x, y, z int) bool {
-	return v.GetV(x, y, z) != 0
+func (v *SparseVolume) Get(node g3.Node) bool {
+	return v.GetV(node[0], node[1], node[2]) != 0
 }
 
 // GetV returns the color of the voxel (empty voxel has color == 0).
