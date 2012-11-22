@@ -31,20 +31,11 @@ var (
 	n4dy = n6dy[0:4]
 )
 
-type Uint16Volume interface {
-	volume.Space
-	Set(node g3.Node, v uint16)
-	GetV(node g3.Node) uint16
-	SetAllFilled(threshold, val uint16)
-	MapBoundary(f func(node g3.Node))
-	Volume() int64
-}
-
-func Index(vol Uint16Volume, x, y, z int) int {
+func Index(vol volume.Uint16Space, x, y, z int) int {
 	return x*vol.N()*vol.N() + y*vol.N() + z
 }
 
-func Coord(vol Uint16Volume, index int) (x, y, z int) {
+func Coord(vol volume.Uint16Space, index int) (x, y, z int) {
 	z = index % vol.N()
 	index /= vol.N()
 	y = index % vol.N()
@@ -53,7 +44,7 @@ func Coord(vol Uint16Volume, index int) (x, y, z int) {
 	return
 }
 
-func Optimize(vol Uint16Volume, n int) {
+func Optimize(vol volume.Uint16Space, n int) {
 	var q, q2 []int
 	vol.SetAllFilled(1, math.MaxUint16-3)
 	vol.MapBoundary(func(node g3.Node) {
@@ -144,7 +135,7 @@ func sampleField2(fX, fY, fZ float64) float64 {
 	return fResult
 }
 
-func NewVolumeField(vol Uint16Volume) surface.ScalarField {
+func NewVolumeField(vol volume.Uint16Space) surface.ScalarField {
 	return func(x, y, z float64) float64 {
 		if x <= 0 || x >= 1 || y <= 0 || y >= 1 || z <= 0 || z >= 1 {
 			return 0
@@ -187,7 +178,7 @@ var cells = []adj{
 	{0, -1, -1, 0.25},
 }
 
-func NewVolumeField2(vol Uint16Volume) surface.ScalarField {
+func NewVolumeField2(vol volume.Uint16Space) surface.ScalarField {
 	return func(x, y, z float64) float64 {
 		if x <= 0 || x >= 1 || y <= 0 || y >= 1 || z <= 0 || z >= 1 {
 			return 0
