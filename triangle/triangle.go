@@ -14,7 +14,7 @@ type Cube [2]Point
 
 const MaxJ = 10
 
-type VolumeSetter interface {
+type SpaceSetter interface {
 	Set16(node g3.Node, val uint16)
 }
 
@@ -158,7 +158,7 @@ func (ps pointSlice) Swap(i, j int) {
 	ps[i], ps[j] = ps[j], ps[i]
 }
 
-func AddDot(a, b, c Point, scale int64, vol VolumeSetter, i0, i1 int64, j0, j1 uint, last1 Point, color uint16) Point {
+func AddDot(a, b, c Point, scale int64, vol SpaceSetter, i0, i1 int64, j0, j1 uint, last1 Point, color uint16) Point {
 	m := j0
 	if m < j1 {
 		m = j1
@@ -178,7 +178,7 @@ func AddDot(a, b, c Point, scale int64, vol VolumeSetter, i0, i1 int64, j0, j1 u
 	return p
 }
 
-func AllTriangleDots(a, b, c Point, scale int64, vol VolumeSetter, color uint16) {
+func AllTriangleDots(a, b, c Point, scale int64, vol SpaceSetter, color uint16) {
 	j0 := findJ(a, c, scale)
 	j1 := findJ(a, b, scale)
 
