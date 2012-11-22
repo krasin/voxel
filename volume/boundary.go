@@ -1,6 +1,6 @@
 package volume
 
-import "math"
+import "github.com/krasin/g3"
 
 type BoolVoxelVolume interface {
 	Get(x, y, z int) bool
@@ -9,83 +9,20 @@ type BoolVoxelVolume interface {
 	ZLen() int
 }
 
-func Normal(vol BoolVoxelVolume, x, y, z int) (nx, ny, nz float64) {
-	var px, py, pz int
-	if vol.Get(x-1, y, z) {
-		px++
+func Normal(vol BoolVoxelVolume, node g3.Node) g3.Vector {
+	var p g3.Node
+
+	for _, vec := range g3.AdjNodes26 {
+		cur := node.Add(vec)
+		if !vol.Get(cur[0], cur[1], cur[2]) {
+			continue
+		}
+		p.Sub(vec)
 	}
-	if vol.Get(x+1, y, z) {
-		px--
+	if p.IsZero() {
+		return g3.Vector{1, 0, 0}
 	}
-	if vol.Get(x, y-1, z) {
-		py++
-	}
-	if vol.Get(x, y+1, z) {
-		py--
-	}
-	if vol.Get(x, y, z-1) {
-		pz++
-	}
-	if vol.Get(x, y, z+1) {
-		pz--
-	}
-	if vol.Get(x-1, y-1, z) {
-		px++
-		py++
-	}
-	if vol.Get(x+1, y-1, z) {
-		px--
-		py++
-	}
-	if vol.Get(x-1, y+1, z) {
-		px++
-		py--
-	}
-	if vol.Get(x+1, y+1, z) {
-		px--
-		py--
-	}
-	if vol.Get(x, y-1, z-1) {
-		py++
-		pz++
-	}
-	if vol.Get(x, y+1, z-1) {
-		py--
-		pz++
-	}
-	if vol.Get(x, y-1, z+1) {
-		py++
-		pz--
-	}
-	if vol.Get(x, y+1, z+1) {
-		py--
-		pz--
-	}
-	if vol.Get(x-1, y, z-1) {
-		px++
-		pz++
-	}
-	if vol.Get(x+1, y, z-1) {
-		px--
-		pz++
-	}
-	if vol.Get(x-1, y, z+1) {
-		px++
-		pz--
-	}
-	if vol.Get(x+1, y, z+1) {
-		px--
-		pz--
-	}
-	r2 := px*px + py*py + pz*pz
-	if r2 == 0 {
-		return 1, 0, 0
-	}
-	l := math.Sqrt(float64(r2))
-	nx = float64(px) / l
-	ny = float64(py) / l
-	nz = float64(pz) / l
-	return
+	return p.Vector().Normalize()
 }
 
 func IsBoundary(vol BoolVoxelVolume, x, y, z int) bool {
