@@ -104,7 +104,7 @@ func (v *SparseVolume) SetAllFilled(threshold, val uint16) {
 }
 
 // MapBoundary invokes a provided function on every border voxel.
-func (v *SparseVolume) MapBoundary(f func(x, y, z int)) {
+func (v *SparseVolume) MapBoundary(f func(node g3.Node)) {
 	for k, cube := range v.Cubes {
 		if cube == nil {
 			// Skip empty cubes
@@ -135,7 +135,7 @@ func (v *SparseVolume) MapBoundary(f func(x, y, z int)) {
 						}
 						p2[2] = p[2] + uint16(z)
 						if IsBoundary(v, g3.Node{int(p2[0]), int(p2[1]), int(p2[2])}) {
-							f(int(p2[0]), int(p2[1]), int(p2[2]))
+							f(g3.Node{int(p2[0]), int(p2[1]), int(p2[2])})
 						}
 					}
 				}
@@ -149,7 +149,7 @@ func (v *SparseVolume) MapBoundary(f func(x, y, z int)) {
 
 			if p[0] == 0 || p[1] == 0 || p[2] == 0 ||
 				int(p[0]) == v.n-1 || int(p[1]) == v.n-1 || int(p[2]) == v.n-1 {
-				f(int(p[0]), int(p[1]), int(p[2]))
+				f(g3.Node{int(p[0]), int(p[1]), int(p[2])})
 				continue
 			}
 			hp := h2point(h)
@@ -160,7 +160,7 @@ func (v *SparseVolume) MapBoundary(f func(x, y, z int)) {
 					hp2 := hp
 					hp2[i]--
 					if cube[point2h(hp2)] == 0 {
-						f(int(p[0]), int(p[1]), int(p[2]))
+						f(g3.Node{int(p[0]), int(p[1]), int(p[2])})
 						was = true
 						break
 					}
@@ -169,7 +169,7 @@ func (v *SparseVolume) MapBoundary(f func(x, y, z int)) {
 					hp2 := hp
 					hp2[i]++
 					if cube[point2h(hp2)] == 0 {
-						f(int(p[0]), int(p[1]), int(p[2]))
+						f(g3.Node{int(p[0]), int(p[1]), int(p[2])})
 						was = true
 						break
 					}
@@ -184,7 +184,7 @@ func (v *SparseVolume) MapBoundary(f func(x, y, z int)) {
 					p2 := p
 					p2[i]--
 					if v.GetV(g3.Node{int(p2[0]), int(p2[1]), int(p2[2])}) == 0 {
-						f(int(p[0]), int(p[1]), int(p[2]))
+						f(g3.Node{int(p[0]), int(p[1]), int(p[2])})
 						was = true
 						break
 					}
@@ -193,7 +193,7 @@ func (v *SparseVolume) MapBoundary(f func(x, y, z int)) {
 					p2 := p
 					p2[i]++
 					if v.GetV(g3.Node{int(p2[0]), int(p2[1]), int(p2[2])}) == 0 {
-						f(int(p[0]), int(p[1]), int(p[2]))
+						f(g3.Node{int(p[0]), int(p[1]), int(p[2])})
 						was = true
 						break
 					}

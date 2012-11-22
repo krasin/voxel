@@ -36,7 +36,7 @@ type Uint16Volume interface {
 	Set(node g3.Node, v uint16)
 	GetV(node g3.Node) uint16
 	SetAllFilled(threshold, val uint16)
-	MapBoundary(f func(x, y, z int))
+	MapBoundary(f func(node g3.Node))
 	Volume() int64
 }
 
@@ -56,10 +56,10 @@ func Coord(vol Uint16Volume, index int) (x, y, z int) {
 func Optimize(vol Uint16Volume, n int) {
 	var q, q2 []int
 	vol.SetAllFilled(1, math.MaxUint16-3)
-	vol.MapBoundary(func(x, y, z int) {
-		if z > 8 {
-			vol.Set(g3.Node{x, y, z}, 1)
-			q = append(q, Index(vol, x, y, z))
+	vol.MapBoundary(func(node g3.Node) {
+		if node[2] > 8 {
+			vol.Set(node, 1)
+			q = append(q, Index(vol, node[0], node[1], node[2]))
 			return
 		}
 	})
