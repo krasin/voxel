@@ -179,7 +179,7 @@ func (v *SparseVolume) MapBoundary(f func(node g3.Node)) {
 				if hp[i] == 0 {
 					p2 := p
 					p2[i]--
-					if v.GetV(g3.Node{int(p2[0]), int(p2[1]), int(p2[2])}) == 0 {
+					if v.GetV(p2) == 0 {
 						f(p)
 						was = true
 						break
@@ -188,7 +188,7 @@ func (v *SparseVolume) MapBoundary(f func(node g3.Node)) {
 				if hp[i] == (1<<lh)-1 {
 					p2 := p
 					p2[i]++
-					if v.GetV(g3.Node{int(p2[0]), int(p2[1]), int(p2[2])}) == 0 {
+					if v.GetV(p2) == 0 {
 						f(p)
 						was = true
 						break
