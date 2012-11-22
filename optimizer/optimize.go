@@ -131,14 +131,16 @@ func sampleField2(fX, fY, fZ float64) float64 {
 	return fResult
 }
 
-func NewVolumeField(vol volume.Space16) surface.ScalarField {
-	return func(x, y, z float64) float64 {
-		if x <= 0 || x >= 1 || y <= 0 || y >= 1 || z <= 0 || z >= 1 {
-			return 0
+func NewVolumeField(vol volume.Space16) g3.ScalarField {
+	return func(p g3.Point) float64 {
+		for _, v := range p {
+			if v <= 0 || v >= 1 {
+				return 0
+			}
 		}
-		xx := int(x * float64(vol.N()))
-		yy := int(y * float64(vol.N()))
-		zz := int(z * float64(vol.N()))
+		xx := int(p[0] * float64(vol.N()))
+		yy := int(p[1] * float64(vol.N()))
+		zz := int(p[2] * float64(vol.N()))
 		val := vol.Get(g3.Node{xx, yy, zz})
 		if val {
 			return 100
@@ -174,14 +176,17 @@ var cells = []adj{
 	{0, -1, -1, 0.25},
 }
 
-func NewVolumeField2(vol volume.Space16) surface.ScalarField {
-	return func(x, y, z float64) float64 {
-		if x <= 0 || x >= 1 || y <= 0 || y >= 1 || z <= 0 || z >= 1 {
-			return 0
+func NewVolumeField2(vol volume.Space16) g3.ScalarField {
+	return func(p g3.Point) float64 {
+		for _, v := range p {
+			if v <= 0 || v >= 1 {
+				return 0
+			}
 		}
-		fx := x * float64(vol.N())
-		fy := y * float64(vol.N())
-		fz := z * float64(vol.N())
+
+		fx := p[0] * float64(vol.N())
+		fy := p[1] * float64(vol.N())
+		fz := p[2] * float64(vol.N())
 
 		xx := int(fx)
 		yy := int(fy)
