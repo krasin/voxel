@@ -2,6 +2,8 @@ package volume
 
 import (
 	"testing"
+
+	"github.com/krasin/g3"
 )
 
 type spread3test struct {
@@ -33,17 +35,17 @@ func TestSpread3(t *testing.T) {
 }
 
 type point2hTest struct {
-	p               Point16
+	p               g3.Node
 	h               int
 	skipReverseTest bool
 }
 
 var point2hTests = []point2hTest{
-	{Point16{0, 0, 0}, 0, false},
-	{Point16{1, 1, 1}, 0x421, false},
-	{Point16{32, 32, 32}, 0, true},
-	{Point16{31, 31, 31}, (1 << 15) - 1, false},
-	{Point16{15, 31, 4}, 0x3FE4, false},
+	{g3.Node{0, 0, 0}, 0, false},
+	{g3.Node{1, 1, 1}, 0x421, false},
+	{g3.Node{32, 32, 32}, 0, true},
+	{g3.Node{31, 31, 31}, (1 << 15) - 1, false},
+	{g3.Node{15, 31, 4}, 0x3FE4, false},
 }
 
 func TestPoint2h(t *testing.T) {
@@ -63,16 +65,16 @@ func TestPoint2h(t *testing.T) {
 }
 
 type point2kTest struct {
-	p Point16
+	p g3.Node
 	k int
 }
 
 var point2kTests = []point2kTest{
-	{Point16{0, 0, 0}, 0},
-	{Point16{32, 32, 32}, 7},
-	{Point16{0xFF << 5, 0xFF << 5, 0xFF << 5}, 0xFFFFFF},
-	{Point16{0, 0, 0xFF << 5}, 0x249249},
-	{Point16{103 << 5, 22 << 5, 12 << 5}, 0x1223F4},
+	{g3.Node{0, 0, 0}, 0},
+	{g3.Node{32, 32, 32}, 7},
+	{g3.Node{0xFF << 5, 0xFF << 5, 0xFF << 5}, 0xFFFFFF},
+	{g3.Node{0, 0, 0xFF << 5}, 0x249249},
+	{g3.Node{103 << 5, 22 << 5, 12 << 5}, 0x1223F4},
 }
 
 func TestPoint2k(t *testing.T) {
@@ -89,16 +91,16 @@ func TestPoint2k(t *testing.T) {
 }
 
 type point2keyTest struct {
-	p   Point16
+	p   g3.Node
 	key uint64
 }
 
 var point2keyTests = []point2keyTest{
-	{Point16{0, 0, 0}, 0},
-	{Point16{1, 1, 1}, 0x421},
-	{Point16{32, 32, 32}, 0x38000},
-	{Point16{33, 33, 33}, 0x38421},
-	{Point16{511, 0, 1}, 0x4927C01},
+	{g3.Node{0, 0, 0}, 0},
+	{g3.Node{1, 1, 1}, 0x421},
+	{g3.Node{32, 32, 32}, 0x38000},
+	{g3.Node{33, 33, 33}, 0x38421},
+	{g3.Node{511, 0, 1}, 0x4927C01},
 }
 
 func TestPoint2Key(t *testing.T) {

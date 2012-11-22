@@ -155,7 +155,7 @@ func Rasterize(m Mesh, n int) Uint16Volume {
 		for i := 0; i < 3; i++ {
 			for j := -1; j <= 1; j += 2 {
 				p2 := p
-				p2[i] = uint16(int(p2[i]) + j)
+				p2[i] = p2[i] + j
 				k2 := volume.Cube2k(p2)
 				if k2 >= len(vol.Colors) {
 					panic(fmt.Sprintf("k2: %d, len(vol.Colors): %d, len(vol.Cubes): %d, p: %v, p2: %v, k: %d", k2, len(vol.Colors), len(vol.Cubes), p, p2, k))
@@ -194,7 +194,7 @@ func Rasterize(m Mesh, n int) Uint16Volume {
 			for i := 0; i < 3; i++ {
 				for j := -1; j <= 1; j += 2 {
 					p2 := p
-					p2[i] = uint16(int(p2[i]) + j)
+					p2[i] = p2[i] + j
 					color2 := vol.GetV(g3.Node{int(p2[0]), int(p2[1]), int(p2[2])})
 					if int(color2) < shift {
 						continue
