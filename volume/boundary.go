@@ -7,7 +7,7 @@ type Space interface {
 	N() int
 }
 
-type Uint16Space interface {
+type Space16 interface {
 	Space
 	Set(node g3.Node, v uint16)
 	GetV(node g3.Node) uint16

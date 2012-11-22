@@ -109,7 +109,7 @@ func STLToMesh(n int, triangles []stl.Triangle) (m Mesh) {
 	return
 }
 
-func Rasterize(m Mesh, n int) volume.Uint16Space {
+func Rasterize(m Mesh, n int) volume.Space16 {
 	scale := m.N[0] / int64(n)
 	vol := volume.NewSparseVolume(n)
 
