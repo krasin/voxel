@@ -2,6 +2,8 @@ package triangle
 
 import (
 	"math/big"
+
+	"github.com/krasin/g3"
 )
 
 type Point [3]int64
@@ -13,7 +15,7 @@ type Cube [2]Point
 const MaxJ = 10
 
 type VolumeSetter interface {
-	Set(x, y, z int, val uint16)
+	Set(node g3.Node, val uint16)
 }
 
 func NewVector(p1, p2 Point) Vector {
@@ -171,7 +173,7 @@ func AddDot(a, b, c Point, scale int64, vol VolumeSetter, i0, i1 int64, j0, j1 u
 	}
 
 	p = toGrid(p, scale)
-	vol.Set(int(p[0]), int(p[1]), int(p[2]), color)
+	vol.Set(g3.Node{int(p[0]), int(p[1]), int(p[2])}, color)
 
 	return p
 }

@@ -3,6 +3,8 @@ package triangle
 import (
 	"sort"
 	"testing"
+
+	"github.com/krasin/g3"
 )
 
 type triangleTest struct {
@@ -277,27 +279,27 @@ type testVolumeSetter struct {
 	val []uint16
 }
 
-func (s *testVolumeSetter) Set(x, y, z int, val uint16) {
-	ind := s.find(x, y, z)
+func (s *testVolumeSetter) Set(node g3.Node, val uint16) {
+	ind := s.find(node)
 	if ind != -1 {
 		s.val[ind] = val
 		return
 	}
-	s.p = append(s.p, Point{int64(x), int64(y), int64(z)})
+	s.p = append(s.p, Point{int64(node[0]), int64(node[1]), int64(node[2])})
 	s.val = append(s.val, val)
 }
 
-func (s *testVolumeSetter) find(x, y, z int) int {
+func (s *testVolumeSetter) find(node g3.Node) int {
 	for ind, p := range s.p {
-		if p[0] == int64(x) && p[1] == int64(y) && p[2] == int64(z) {
+		if p[0] == int64(node[0]) && p[1] == int64(node[1]) && p[2] == int64(node[2]) {
 			return ind
 		}
 	}
 	return -1
 }
 
-func (s *testVolumeSetter) Get(x, y, z int) bool {
-	ind := s.find(x, y, z)
+func (s *testVolumeSetter) Get(node g3.Node) bool {
+	ind := s.find(node)
 	return ind != -1 && s.val[ind] != 0
 }
 
@@ -311,7 +313,7 @@ func TestAllTriangleDots(t *testing.T) {
 			continue
 		}
 		for _, p := range test.p {
-			if !vol.Get(int(p[0]), int(p[1]), int(p[2])) {
+			if !vol.Get(g3.Node{int(p[0]), int(p[1]), int(p[2])}) {
 				t.Errorf("Test #%d: point expected, but not returned: %v. Want: %v, got: %v", ind, p, test.p, vol.p)
 				continue
 			}

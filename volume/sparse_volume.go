@@ -64,24 +64,26 @@ func (v *SparseVolume) ZLen() int {
 }
 
 // Set sets the color of the voxel.
-func (v *SparseVolume) Set(x, y, z int, val uint16) {
-	if x < 0 || y < 0 || z < 0 || x >= v.n || y >= v.n || z >= v.n {
-		return
-	}
-	p := Point16{uint16(x), uint16(y), uint16(z)}
-	k := point2k(p)
-	if v.Cubes[k] == nil {
-		if v.Colors[k] == val {
+func (vol *SparseVolume) Set(node g3.Node, val uint16) {
+	for _, v := range node {
+		if v < 0 || v >= vol.n {
 			return
 		}
-		old := v.Colors[k]
-		v.Colors[k] = 0
-		v.Cubes[k] = make([]uint16, 1<<(3*lh))
-		for i := range v.Cubes[k] {
-			v.Cubes[k][i] = old
+	}
+	p := Point16{uint16(node[0]), uint16(node[1]), uint16(node[2])}
+	k := point2k(p)
+	if vol.Cubes[k] == nil {
+		if vol.Colors[k] == val {
+			return
+		}
+		old := vol.Colors[k]
+		vol.Colors[k] = 0
+		vol.Cubes[k] = make([]uint16, 1<<(3*lh))
+		for i := range vol.Cubes[k] {
+			vol.Cubes[k][i] = old
 		}
 	}
-	v.Cubes[k][point2h(p)] = val
+	vol.Cubes[k][point2h(p)] = val
 }
 
 // SetAllFilled sets the specified color to all voxels with color >= threshold.

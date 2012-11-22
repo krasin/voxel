@@ -41,7 +41,7 @@ var (
 
 type Uint16Volume interface {
 	volume.BoolVoxelVolume
-	Set(x, y, z int, v uint16)
+	Set(node g3.Node, v uint16)
 	GetV(node g3.Node) uint16
 	SetAllFilled(threshold, val uint16)
 	MapBoundary(f func(x, y, z int))
@@ -200,7 +200,7 @@ func Rasterize(m Mesh, n int) Uint16Volume {
 						continue
 					}
 					if color == 0 {
-						vol.Set(int(p[0]), int(p[1]), int(p[2]), color2)
+						vol.Set(g3.Node{int(p[0]), int(p[1]), int(p[2])}, color2)
 						color = color2
 					} else {
 						ds.Join(int(color)-shift, int(color2)-shift)
@@ -208,7 +208,7 @@ func Rasterize(m Mesh, n int) Uint16Volume {
 				}
 			}
 			if color == 0 {
-				vol.Set(int(p[0]), int(p[1]), int(p[2]), uint16(shift+ds.Make()))
+				vol.Set(g3.Node{int(p[0]), int(p[1]), int(p[2])}, uint16(shift+ds.Make()))
 			}
 		}
 	}
