@@ -233,7 +233,6 @@ func main() {
 		volume = -volume
 	}
 	fmt.Fprintf(os.Stderr, "Mesh volume (in mesh units): %d\n", volume)
-	fmt.Fprintf(os.Stderr, "Mesh volume (original units): %f\n", float64(volume)/float64(mesh.N[0]*mesh.N[1]*mesh.N[2])*(mesh.P1[0]-mesh.P0[0])*(mesh.P1[1]-mesh.P0[1])*(mesh.P1[2]-mesh.P0[2]))
 	timing.StopTiming("MeshVolume")
 
 	timing.StartTiming("Rasterize")
@@ -254,8 +253,8 @@ func main() {
 	*/
 
 	//	t := surface.MarchingCubes(sampleField2, 256, 48)
-	size := mesh.Grid.Size()
-	vsize := surface.Vector{size[0], size[1], size[2]}
+	side := mesh.Grid.Side()
+	vsize := surface.Vector{side, side, side}
 	t := surface.MarchingCubes(NewVolumeField2(vol), 128, 0.8, vsize)
 	var f *os.File
 	if f, err = os.OpenFile("output.stl", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644); err != nil {

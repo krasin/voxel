@@ -46,44 +46,22 @@ func PinkX(n int) color.RGBA {
 	return Pink
 }
 
-type Grid struct {
-	P0 [3]float64
-	P1 [3]float64
-	N  [3]int64
-}
-
-func (g Grid) Coord(node g3.Node) [3]float64 {
-	d0 := (g.P1[0] - g.P0[0]) / float64(g.N[0])
-	d1 := (g.P1[1] - g.P0[1]) / float64(g.N[1])
-	d2 := (g.P1[2] - g.P0[2]) / float64(g.N[2])
-
-	return [3]float64{
-		g.P0[0] + d0*float64(node[0]),
-		g.P0[1] + d1*float64(node[1]),
-		g.P0[2] + d2*float64(node[2]),
-	}
-}
-
-func (g Grid) Size() [3]float64 {
-	return [3]float64{
-		g.P1[0] - g.P0[0],
-		g.P1[1] - g.P0[1],
-		g.P1[2] - g.P0[2],
-	}
-}
-
 type Mesh struct {
-	Grid
+	g3.Grid
 	Triangle []triangle.Triangle
 }
 
 func STLToMesh(n int, triangles []stl.Triangle) (m Mesh) {
-	min := []float32{math.MaxFloat32, math.MaxFloat32, math.MaxFloat32}
-	max := []float32{-math.MaxFloat32, -math.MaxFloat32, -math.MaxFloat32}
+	if n < 4 {
+		panic("n < 4")
+	}
+	// Find bounds
+	min := g3.Point{math.MaxFloat64, math.MaxFloat64, math.MaxFloat64}
+	max := g3.Point{-math.MaxFloat64, -math.MaxFloat64, -math.MaxFloat64}
 	for _, t := range triangles {
 		for i := 0; i < 3; i++ {
 			for j := 0; j < 3; j++ {
-				cur := t.V[i][j]
+				cur := float64(t.V[i][j])
 				if min[j] > cur {
 					min[j] = cur
 				}
@@ -93,29 +71,45 @@ func STLToMesh(n int, triangles []stl.Triangle) (m Mesh) {
 			}
 		}
 	}
-	m.P0 = [3]float64{float64(min[0]) - 1, float64(min[1]) - 1, float64(min[2]) - 1}
-	m.P1 = [3]float64{float64(max[0]) + 1, float64(max[1]) + 1, float64(max[2]) + 1}
-	m.N = [3]int64{int64(n), int64(n), int64(n)}
+
+	// Now, we need to determine a step H for uniform grid that starts from point min,
+	// which will contains all the figure.
+	// Additional trick: we want min to be at (1,1,1) and max not far than (n-1,n-1,n-1)
+	// to prevent edge effects.
+	vsize := max.Sub(min)
+	var maxSize float64
+	for _, v := range vsize {
+		if v > maxSize {
+			maxSize = v
+		}
+	}
+	h := maxSize / float64(n-2)
+
+	// Now, we know all mesh parameters: N, H and know that min is at (1,1,1)
+	m.N = n
+	m.H = h
+	m.P0 = min.Sub(g3.Point{h, h, h})
 	m.Triangle = make([]triangle.Triangle, len(triangles))
 	for i, t := range triangles {
 		cur := &m.Triangle[i]
 		for i := 0; i < 3; i++ {
-			for j := 0; j < 3; j++ {
-				val := float64(t.V[i][j])
-				cur[i][j] = int64((val - m.P0[j]) * float64(m.N[j]) / (m.P1[j] - m.P0[j]))
-			}
+			p := g3.Point{float64(t.V[i][0]), float64(t.V[i][1]), float64(t.V[i][2])}
+			node := m.Node(p)
+			cur[i][0] = int64(node[0])
+			cur[i][1] = int64(node[1])
+			cur[i][2] = int64(node[2])
 		}
 	}
 	return
 }
 
 func Rasterize(m Mesh, n int) volume.Space16 {
-	scale := m.N[0] / int64(n)
+	scale := m.N / n
 	vol := volume.NewSparseVolume(n)
 
 	timing.StartTiming("Rasterize triangles")
 	for index, t := range m.Triangle {
-		triangle.AllTriangleDots(t[0], t[1], t[2], scale, vol, uint16(1+(index%10)))
+		triangle.AllTriangleDots(t[0], t[1], t[2], int64(scale), vol, uint16(1+(index%10)))
 	}
 	fmt.Fprintf(os.Stderr, "Triangle rasterization complete\n")
 	timing.StopTiming("Rasterize triangles")
