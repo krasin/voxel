@@ -48,16 +48,8 @@ func (vol *SparseVolume) GetV(node g3.Node) uint16 {
 	return vol.Cubes[k][point2h(node)]
 }
 
-func (v *SparseVolume) XLen() int {
-	return v.n
-}
-
-func (v *SparseVolume) YLen() int {
-	return v.n
-}
-
-func (v *SparseVolume) ZLen() int {
-	return v.n
+func (vol *SparseVolume) N() int {
+	return vol.n
 }
 
 // Set sets the color of the voxel.

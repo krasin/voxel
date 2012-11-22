@@ -19,9 +19,9 @@ type Uint16Volume interface {
 }
 
 func Write(w io.Writer, vol Uint16Volume, grid raster.Grid) (err error) {
-	stepX := (grid.P1[0] - grid.P0[0]) / float64(vol.XLen())
-	stepY := (grid.P1[1] - grid.P0[1]) / float64(vol.YLen())
-	stepZ := (grid.P1[2] - grid.P0[2]) / float64(vol.ZLen())
+	stepX := (grid.P1[0] - grid.P0[0]) / float64(vol.N())
+	stepY := (grid.P1[1] - grid.P0[1]) / float64(vol.N())
+	stepZ := (grid.P1[2] - grid.P0[2]) / float64(vol.N())
 
 	vol.MapBoundary(func(x, y, z int) {
 		nv := volume.Normal(vol, g3.Node{x, y, z})

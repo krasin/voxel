@@ -41,14 +41,14 @@ type Uint16Volume interface {
 }
 
 func Index(vol Uint16Volume, x, y, z int) int {
-	return x*vol.YLen()*vol.ZLen() + y*vol.ZLen() + z
+	return x*vol.N()*vol.N() + y*vol.N() + z
 }
 
 func Coord(vol Uint16Volume, index int) (x, y, z int) {
-	z = index % vol.ZLen()
-	index /= vol.ZLen()
-	y = index % vol.YLen()
-	index /= vol.YLen()
+	z = index % vol.N()
+	index /= vol.N()
+	y = index % vol.N()
+	index /= vol.N()
 	x = index
 	return
 }
@@ -149,9 +149,9 @@ func NewVolumeField(vol Uint16Volume) surface.ScalarField {
 		if x <= 0 || x >= 1 || y <= 0 || y >= 1 || z <= 0 || z >= 1 {
 			return 0
 		}
-		xx := int(x * float64(vol.XLen()))
-		yy := int(y * float64(vol.YLen()))
-		zz := int(z * float64(vol.ZLen()))
+		xx := int(x * float64(vol.N()))
+		yy := int(y * float64(vol.N()))
+		zz := int(z * float64(vol.N()))
 		val := vol.Get(g3.Node{xx, yy, zz})
 		if val {
 			return 100
@@ -192,9 +192,9 @@ func NewVolumeField2(vol Uint16Volume) surface.ScalarField {
 		if x <= 0 || x >= 1 || y <= 0 || y >= 1 || z <= 0 || z >= 1 {
 			return 0
 		}
-		fx := x * float64(vol.XLen())
-		fy := y * float64(vol.YLen())
-		fz := z * float64(vol.ZLen())
+		fx := x * float64(vol.N())
+		fy := y * float64(vol.N())
+		fz := z * float64(vol.N())
 
 		xx := int(fx)
 		yy := int(fy)
@@ -262,7 +262,7 @@ func main() {
 			log.Fatalf("nptl.Write: %v", err)
 		}
 		v := vol.Volume()
-		fmt.Fprintf(os.Stderr, "Volume is filled by %v%%\n", float64(v)*float64(100)/(float64(vol.XLen())*float64(vol.YLen())*float64(vol.ZLen())))
+		fmt.Fprintf(os.Stderr, "Volume is filled by %v%%\n", float64(v)*float64(100)/(float64(vol.N())*float64(vol.N())*float64(vol.N())))
 		timing.StopTiming("Write nptl")
 	*/
 

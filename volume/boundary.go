@@ -4,9 +4,7 @@ import "github.com/krasin/g3"
 
 type BoolVoxelVolume interface {
 	Get(node g3.Node) bool
-	XLen() int
-	YLen() int
-	ZLen() int
+	N() int
 }
 
 func Normal(vol BoolVoxelVolume, node g3.Node) g3.Vector {
