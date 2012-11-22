@@ -10,7 +10,7 @@ type Space interface {
 type Space16 interface {
 	Space
 	Set(node g3.Node, v uint16)
-	GetV(node g3.Node) uint16
+	Get16(node g3.Node) uint16
 	SetAllFilled(threshold, val uint16)
 	MapBoundary(f func(node g3.Node))
 	Volume() int64

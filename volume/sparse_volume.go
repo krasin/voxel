@@ -31,11 +31,11 @@ func NewSparseVolume(n int) (v *SparseVolume) {
 
 // Get returns true, if the voxel is filled (color != 0).
 func (v *SparseVolume) Get(node g3.Node) bool {
-	return v.GetV(node) != 0
+	return v.Get16(node) != 0
 }
 
-// GetV returns the color of the voxel (empty voxel has color == 0).
-func (vol *SparseVolume) GetV(node g3.Node) uint16 {
+// Get16 returns the color of the voxel (empty voxel has color == 0).
+func (vol *SparseVolume) Get16(node g3.Node) uint16 {
 	for _, v := range node {
 		if v < 0 || v >= vol.n {
 			return 0
@@ -171,7 +171,7 @@ func (v *SparseVolume) MapBoundary(f func(node g3.Node)) {
 				if hp[i] == 0 {
 					p2 := p
 					p2[i]--
-					if v.GetV(p2) == 0 {
+					if v.Get16(p2) == 0 {
 						f(p)
 						was = true
 						break
@@ -180,7 +180,7 @@ func (v *SparseVolume) MapBoundary(f func(node g3.Node)) {
 				if hp[i] == (1<<lh)-1 {
 					p2 := p
 					p2[i]++
-					if v.GetV(p2) == 0 {
+					if v.Get16(p2) == 0 {
 						f(p)
 						was = true
 						break

@@ -60,7 +60,7 @@ func Optimize(vol volume.Space16, n int) {
 		q, q2 = q2[:0], q
 		for _, index := range q2 {
 			x, y, z := Coord(vol, index)
-			v := vol.GetV(g3.Node{x, y, z})
+			v := vol.Get16(g3.Node{x, y, z})
 			if v == 0 {
 				panic(fmt.Sprintf("x: %d, y: %d, z: %d, v == 0", x, y, z))
 			}
@@ -68,7 +68,7 @@ func Optimize(vol volume.Space16, n int) {
 				x1 := x + n6dx[k]
 				y1 := y + n6dy[k]
 				z1 := z + n6dz[k]
-				v1 := vol.GetV(g3.Node{x1, y1, z1})
+				v1 := vol.Get16(g3.Node{x1, y1, z1})
 				if v1 > v+1 && int(v)+1 <= n {
 					vol.Set(g3.Node{x1, y1, z1}, v+1)
 					q = append(q, Index(vol, x1, y1, z1))
