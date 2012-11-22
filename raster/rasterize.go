@@ -40,7 +40,7 @@ var (
 )
 
 type Uint16Volume interface {
-	volume.BoolVoxelVolume
+	volume.Space
 	Set(node g3.Node, v uint16)
 	GetV(node g3.Node) uint16
 	SetAllFilled(threshold, val uint16)

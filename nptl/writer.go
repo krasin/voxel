@@ -10,7 +10,7 @@ import (
 )
 
 type Uint16Volume interface {
-	volume.BoolVoxelVolume
+	volume.Space
 	Set(x, y, z int, v uint16)
 	GetV(x, y, z int) uint16
 	SetAllFilled(threshold, val uint16)

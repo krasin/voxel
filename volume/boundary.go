@@ -2,12 +2,12 @@ package volume
 
 import "github.com/krasin/g3"
 
-type BoolVoxelVolume interface {
+type Space interface {
 	Get(node g3.Node) bool
 	N() int
 }
 
-func Normal(vol BoolVoxelVolume, node g3.Node) g3.Vector {
+func Normal(vol Space, node g3.Node) g3.Vector {
 	var p g3.Node
 
 	for _, vec := range g3.AdjNodes26 {
@@ -23,7 +23,7 @@ func Normal(vol BoolVoxelVolume, node g3.Node) g3.Vector {
 	return p.Vector().Normalize()
 }
 
-func IsBoundary(vol BoolVoxelVolume, node g3.Node) bool {
+func IsBoundary(vol Space, node g3.Node) bool {
 	if !vol.Get(node) {
 		return false
 	}
