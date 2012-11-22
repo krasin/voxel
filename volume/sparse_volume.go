@@ -1,5 +1,7 @@
 package volume
 
+import "github.com/krasin/g3"
+
 type Point16 [3]uint16
 
 const (
@@ -128,7 +130,7 @@ func (v *SparseVolume) MapBoundary(f func(x, y, z int)) {
 							continue
 						}
 						p2[2] = p[2] + uint16(z)
-						if IsBoundary(v, int(p2[0]), int(p2[1]), int(p2[2])) {
+						if IsBoundary(v, g3.Node{int(p2[0]), int(p2[1]), int(p2[2])}) {
 							f(int(p2[0]), int(p2[1]), int(p2[2]))
 						}
 					}
