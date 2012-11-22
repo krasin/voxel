@@ -279,7 +279,7 @@ type testVolumeSetter struct {
 	val []uint16
 }
 
-func (s *testVolumeSetter) Set(node g3.Node, val uint16) {
+func (s *testVolumeSetter) Set16(node g3.Node, val uint16) {
 	ind := s.find(node)
 	if ind != -1 {
 		s.val[ind] = val

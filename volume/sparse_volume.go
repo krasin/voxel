@@ -53,7 +53,7 @@ func (vol *SparseVolume) N() int {
 }
 
 // Set sets the color of the voxel.
-func (vol *SparseVolume) Set(node g3.Node, val uint16) {
+func (vol *SparseVolume) Set16(node g3.Node, val uint16) {
 	for _, v := range node {
 		if v < 0 || v >= vol.n {
 			return

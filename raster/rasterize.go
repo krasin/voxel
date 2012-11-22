@@ -191,7 +191,7 @@ func Rasterize(m Mesh, n int) volume.Space16 {
 						continue
 					}
 					if color == 0 {
-						vol.Set(g3.Node{int(p[0]), int(p[1]), int(p[2])}, color2)
+						vol.Set16(g3.Node{int(p[0]), int(p[1]), int(p[2])}, color2)
 						color = color2
 					} else {
 						ds.Join(int(color)-shift, int(color2)-shift)
@@ -199,7 +199,7 @@ func Rasterize(m Mesh, n int) volume.Space16 {
 				}
 			}
 			if color == 0 {
-				vol.Set(g3.Node{int(p[0]), int(p[1]), int(p[2])}, uint16(shift+ds.Make()))
+				vol.Set16(g3.Node{int(p[0]), int(p[1]), int(p[2])}, uint16(shift+ds.Make()))
 			}
 		}
 	}

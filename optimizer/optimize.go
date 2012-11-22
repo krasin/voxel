@@ -49,7 +49,7 @@ func Optimize(vol volume.Space16, n int) {
 	vol.SetAllFilled(1, math.MaxUint16-3)
 	vol.MapBoundary(func(node g3.Node) {
 		if node[2] > 8 {
-			vol.Set(node, 1)
+			vol.Set16(node, 1)
 			q = append(q, Index(vol, node[0], node[1], node[2]))
 			return
 		}
@@ -70,7 +70,7 @@ func Optimize(vol volume.Space16, n int) {
 				z1 := z + n6dz[k]
 				v1 := vol.Get16(g3.Node{x1, y1, z1})
 				if v1 > v+1 && int(v)+1 <= n {
-					vol.Set(g3.Node{x1, y1, z1}, v+1)
+					vol.Set16(g3.Node{x1, y1, z1}, v+1)
 					q = append(q, Index(vol, x1, y1, z1))
 				}
 			}
@@ -79,10 +79,6 @@ func Optimize(vol volume.Space16, n int) {
 	vol.SetAllFilled(uint16(n+1), 0)
 
 	return
-}
-
-type VolumeSetter interface {
-	Set(x, y, z int, val uint16)
 }
 
 type Location16 [2]int16
