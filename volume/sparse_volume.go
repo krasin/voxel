@@ -33,20 +33,22 @@ func NewSparseVolume(n int) (v *SparseVolume) {
 
 // Get returns true, if the voxel is filled (color != 0).
 func (v *SparseVolume) Get(node g3.Node) bool {
-	return v.GetV(node[0], node[1], node[2]) != 0
+	return v.GetV(node) != 0
 }
 
 // GetV returns the color of the voxel (empty voxel has color == 0).
-func (v *SparseVolume) GetV(x, y, z int) uint16 {
-	if x < 0 || y < 0 || z < 0 || x >= v.n || y >= v.n || z >= v.n {
-		return 0
+func (vol *SparseVolume) GetV(node g3.Node) uint16 {
+	for _, v := range node {
+		if v < 0 || v >= vol.n {
+			return 0
+		}
 	}
-	p := Point16{uint16(x), uint16(y), uint16(z)}
+	p := Point16{uint16(node[0]), uint16(node[1]), uint16(node[2])}
 	k := point2k(p)
-	if v.Cubes[k] == nil {
-		return v.Colors[k]
+	if vol.Cubes[k] == nil {
+		return vol.Colors[k]
 	}
-	return v.Cubes[k][point2h(p)]
+	return vol.Cubes[k][point2h(p)]
 }
 
 func (v *SparseVolume) XLen() int {
@@ -179,7 +181,7 @@ func (v *SparseVolume) MapBoundary(f func(x, y, z int)) {
 				if hp[i] == 0 {
 					p2 := p
 					p2[i]--
-					if v.GetV(int(p2[0]), int(p2[1]), int(p2[2])) == 0 {
+					if v.GetV(g3.Node{int(p2[0]), int(p2[1]), int(p2[2])}) == 0 {
 						f(int(p[0]), int(p[1]), int(p[2]))
 						was = true
 						break
@@ -188,7 +190,7 @@ func (v *SparseVolume) MapBoundary(f func(x, y, z int)) {
 				if hp[i] == (1<<lh)-1 {
 					p2 := p
 					p2[i]++
-					if v.GetV(int(p2[0]), int(p2[1]), int(p2[2])) == 0 {
+					if v.GetV(g3.Node{int(p2[0]), int(p2[1]), int(p2[2])}) == 0 {
 						f(int(p[0]), int(p[1]), int(p[2]))
 						was = true
 						break

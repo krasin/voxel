@@ -8,6 +8,7 @@ import (
 	"math"
 	"os"
 
+	"github.com/krasin/g3"
 	"github.com/krasin/stl"
 	"github.com/krasin/voxel/set"
 	"github.com/krasin/voxel/timing"
@@ -41,7 +42,7 @@ var (
 type Uint16Volume interface {
 	volume.BoolVoxelVolume
 	Set(x, y, z int, v uint16)
-	GetV(x, y, z int) uint16
+	GetV(node g3.Node) uint16
 	SetAllFilled(threshold, val uint16)
 	MapBoundary(f func(x, y, z int))
 	Volume() int64
@@ -194,7 +195,7 @@ func Rasterize(m Mesh, n int) Uint16Volume {
 				for j := -1; j <= 1; j += 2 {
 					p2 := p
 					p2[i] = uint16(int(p2[i]) + j)
-					color2 := vol.GetV(int(p2[0]), int(p2[1]), int(p2[2]))
+					color2 := vol.GetV(g3.Node{int(p2[0]), int(p2[1]), int(p2[2])})
 					if int(color2) < shift {
 						continue
 					}
@@ -242,7 +243,7 @@ func Rasterize(m Mesh, n int) Uint16Volume {
 		if z%10 == 0 {
 			for x := 0; x < n; x++ {
 				for y := 0; y < n; y++ {
-					v := vol.GetV(x, y, z)
+					v := vol.GetV(g3.Node{x, y, z})
 					if int(v) < len(colors) {
 						bmp.Set(x, y, colors[v])
 					} else {

@@ -34,7 +34,7 @@ var (
 type Uint16Volume interface {
 	volume.BoolVoxelVolume
 	Set(x, y, z int, v uint16)
-	GetV(x, y, z int) uint16
+	GetV(node g3.Node) uint16
 	SetAllFilled(threshold, val uint16)
 	MapBoundary(f func(x, y, z int))
 	Volume() int64
@@ -69,7 +69,7 @@ func Optimize(vol Uint16Volume, n int) {
 		q, q2 = q2[:0], q
 		for _, index := range q2 {
 			x, y, z := Coord(vol, index)
-			v := vol.GetV(x, y, z)
+			v := vol.GetV(g3.Node{x, y, z})
 			if v == 0 {
 				panic(fmt.Sprintf("x: %d, y: %d, z: %d, v == 0", x, y, z))
 			}
@@ -77,7 +77,7 @@ func Optimize(vol Uint16Volume, n int) {
 				x1 := x + n6dx[k]
 				y1 := y + n6dy[k]
 				z1 := z + n6dz[k]
-				v1 := vol.GetV(x1, y1, z1)
+				v1 := vol.GetV(g3.Node{x1, y1, z1})
 				if v1 > v+1 && int(v)+1 <= n {
 					vol.Set(x1, y1, z1, v+1)
 					q = append(q, Index(vol, x1, y1, z1))
