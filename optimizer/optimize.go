@@ -257,7 +257,6 @@ func main() {
 		timing.StopTiming("Write nptl")
 	*/
 
-	//	t := surface.MarchingCubes(sampleField2, 256, 48)
 	side := mesh.Grid.Side()
 	vsize := surface.Vector{side, side, side}
 	t := surface.MarchingCubes(NewVolumeField2(vol), 128, 0.8, vsize)
