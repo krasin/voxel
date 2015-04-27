@@ -264,7 +264,7 @@ func main() {
 	if f, err = os.OpenFile("output.stl", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644); err != nil {
 		log.Fatal(err)
 	}
-	if err = stl.Write(f, t); err != nil {
+	if err = stl.WriteBinary(f, t); err != nil {
 		log.Fatalf("stl.Write: %v", err)
 	}
 	f.Close()
