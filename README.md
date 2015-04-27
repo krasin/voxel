@@ -1,4 +1,4 @@
-[![Build Status](https://goci.herokuapp.com/project/image/github.com/krasin/voxel "Continous integration")](http://goci.me/project/github.com/krasin/voxel)
+[![Build Status](https://travis-ci.org/krasin/voxel.svg?branch=master)](https://travis-ci.org/krasin/voxel)
 
 Go libraries/utils for voxel processing.
 
