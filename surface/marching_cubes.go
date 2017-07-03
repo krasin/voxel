@@ -507,8 +507,12 @@ func marchCube(t []stl.Triangle, field g3.ScalarField, threshold, fX, fY, fZ, fS
 			// Find out what to do with this.
 			nv := Vector{size.X * asEdgeNorm[iVertex].X, size.Y * asEdgeNorm[iVertex].Y, size.Z * asEdgeNorm[iVertex].Z}
 			nv = normalizeVector(nv)
-			tt.N = stl.Point{float32(nv.X), float32(nv.Y), float32(nv.Z)}
-			tt.V[iCorner] = stl.Point{float32(size.X * asEdgeVertex[iVertex].X), float32(size.Y * asEdgeVertex[iVertex].Y), float32(size.Z * asEdgeVertex[iVertex].Z)}
+			tt.N = stl.Point{nv.X, nv.Y, nv.Z}
+			tt.V[iCorner] = stl.Point{
+				size.X * asEdgeVertex[iVertex].X,
+				size.Y * asEdgeVertex[iVertex].Y,
+				size.Z * asEdgeVertex[iVertex].Z,
+			}
 		}
 		t = append(t, tt)
 	}
